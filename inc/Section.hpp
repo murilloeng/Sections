@@ -1,0 +1,48 @@
+#pragma once
+
+//std
+#include <vector>
+
+//Sections
+#include "Sections/inc/Node.hpp"
+#include "Sections/inc/Element.hpp"
+
+namespace sections
+{
+	class Section
+	{
+	public:
+		//constructors
+		Section(void);
+
+		//destructor
+		~Section(void);
+
+		//data
+		double area(void) const;
+		double inertia(uint32_t) const;
+
+		double shear_area(uint32_t) const;
+		double shear_center(uint32_t) const;
+
+		double torsion_constant(void) const;
+		double warping_constant(void) const;
+		
+		double elastic_modulus(uint32_t) const;
+		double plastic_modulus(uint32_t) const;
+
+	private:
+		//data
+		double m_area;
+		double m_inertia[3];
+		double m_shear_area[3];
+		double m_shear_center[2];
+		double m_torsion_constant;
+		double m_warping_constant;
+		double m_elastic_modulus[2];
+		double m_plastic_modulus[2];
+
+		std::vector<Node> m_nodes;
+		std::vector<Element> m_elements;
+	};
+}
