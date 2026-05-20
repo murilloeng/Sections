@@ -97,17 +97,16 @@ namespace sections
 	//setup
 	void Section::setup_nodes(void)
 	{
-		//data
+		//mesh
 		std::vector<std::size_t> tags;
 		std::vector<double> coordinates;
 		std::vector<double> parametric_coordinates;
-		//mesh
 		gmsh::model::mesh::getNodes(tags, coordinates, parametric_coordinates);
 		//nodes
 		m_nodes.resize(tags.size());
 		for(std::size_t i = 0; i < tags.size(); i++)
 		{
-			for(uint32_t j = 0; j < 3; j++)
+			for(uint32_t j = 0; j < 2; j++)
 			{
 				m_nodes[i].m_position[j] = coordinates[3 * i + j];
 			}
@@ -115,11 +114,10 @@ namespace sections
 	}
 	void Section::setup_elements(void)
 	{
-		//data
+		//mesh
 		std::vector<int32_t> types;
 		std::vector<std::vector<std::size_t>> tags;
 		std::vector<std::vector<std::size_t>> nodes;
-		//mesh
 		gmsh::model::mesh::getElements(types, tags, nodes);
 		//elements
 		for(int32_t type : types)
