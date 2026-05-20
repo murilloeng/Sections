@@ -5,6 +5,8 @@
 
 namespace sections
 {
+	class Section;
+
 	class Node
 	{
 	public:
@@ -29,5 +31,8 @@ namespace sections
 		double m_warping[3];
 		double m_position[2];
 		double m_warping_gradient[6];
+
+		//friends
+		friend class Section;
 	};
 }

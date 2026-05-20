@@ -16,23 +16,41 @@ namespace sections
 		Section(void);
 
 		//destructor
-		~Section(void);
+		virtual ~Section(void);
 
 		//data
 		double area(void) const;
 		double inertia(uint32_t) const;
-
+		
 		double shear_area(uint32_t) const;
 		double shear_center(uint32_t) const;
-
+		
 		double torsion_constant(void) const;
 		double warping_constant(void) const;
 		
 		double elastic_modulus(uint32_t) const;
 		double plastic_modulus(uint32_t) const;
 
-	private:
+		//mesh
+		bool status(void) const;
+		double mesh_size(double);
+		double mesh_size(void) const;
+
+		//compute
+		void compute(void);
+
+	protected:
+		//setup
+		void setup_nodes(void);
+		void setup_elements(void);
+
+		//geometry
+		virtual void setup_geometry(void) const = 0;
+
 		//data
+		bool m_status;
+		double m_mesh_size;
+
 		double m_area;
 		double m_inertia[3];
 		double m_shear_area[3];
