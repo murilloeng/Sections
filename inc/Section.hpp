@@ -36,6 +36,9 @@ namespace sections
 		double mesh_size(double);
 		double mesh_size(void) const;
 
+		const std::vector<Node>& nodes(void) const;
+		const std::vector<Element>& elements(void) const;
+
 		//compute
 		void compute(void);
 

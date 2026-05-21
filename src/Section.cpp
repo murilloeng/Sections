@@ -74,6 +74,15 @@ namespace sections
 		return m_mesh_size = mesh_size;
 	}
 
+	const std::vector<Node>& Section::nodes(void) const
+	{
+		return m_nodes;
+	}
+	const std::vector<Element>& Section::elements(void) const
+	{
+		return m_elements;
+	}
+
 	//analysis
 	void Section::compute(void)
 	{
