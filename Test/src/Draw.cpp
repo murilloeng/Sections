@@ -5,6 +5,7 @@
 //Canvas
 #include "Canvas/inc/Scene/Scene.hpp"
 #include "Canvas/inc/Vertices/Model3D.hpp"
+#include "Canvas/inc/Objects/Tessellator.hpp"
 
 //constructor
 Draw::Draw(void)
@@ -90,8 +91,9 @@ void Draw::setup_elements(void)
 	const uint64_t nn = m_section->nodes().size();
 	const uint64_t ne = m_section->elements().size();
 	//setup
-	m_counter_vertices += nn;
-	m_counter_lines += 2 * ne;
+	m_counter_lines += 12 * ne;
+	m_counter_vertices += 2 * nn;
+	m_counter_triangles += 12 * ne;
 }
 
 //update
@@ -116,25 +118,47 @@ void Draw::update_nodes(void)
 void Draw::update_elements(void)
 {
 	//data
+	uint32_t triangles[12];
+	canvas::vec2 vertices[6];
+	const uint32_t loops[] = {0, 6};
+	const uint32_t list_1[] = {0, 3, 1, 4, 2, 5};
+	const uint32_t list_2[] = {0, 2, 4, 1, 3, 5};
 	const uint64_t nn = m_section->nodes().size();
 	const uint64_t ne = m_section->elements().size();
 	const std::vector<sections::Node>& nodes = m_section->nodes();
 	const std::vector<sections::Element>& elements = m_section->elements();
-	uint32_t* ibo_ptr = m_ibo.data() + m_counter_points + m_index_lines;
+	uint32_t* ibo_ptr_lines = m_ibo.data() + m_counter_points + m_index_lines;
+	uint32_t* ibo_ptr_triangles = m_ibo.data() + m_counter_points + m_counter_lines + m_index_triangles;
 	canvas::vertices::Model3D* vbo_ptr = (canvas::vertices::Model3D*) m_vbo.data() + m_index_vertices;
 	//vbo data
 	for(uint32_t i = 0; i < nn; i++)
 	{
-		vbo_ptr[i].m_color = "blue";
-		vbo_ptr[i].m_position = nodes[i].position();
+		vbo_ptr[i + 1 * nn].m_color = "blue";
+		vbo_ptr[i + 0 * nn].m_color = "white";
+		vbo_ptr[i + 0 * nn].m_position[0] = nodes[i].position(0);
+		vbo_ptr[i + 0 * nn].m_position[1] = nodes[i].position(1);
+		vbo_ptr[i + 1 * nn].m_position[0] = nodes[i].position(0);
+		vbo_ptr[i + 1 * nn].m_position[1] = nodes[i].position(1);
 	}
 	//ibo data
 	for(uint32_t i = 0; i < ne; i++)
 	{
-		ibo_ptr[2 * i + 0] = m_index_vertices + elements[i].node(0);
-		ibo_ptr[2 * i + 1] = m_index_vertices + elements[i].node(1);
+		for(uint32_t j = 0; j < 6; j++)
+		{
+			vertices[j] = vbo_ptr[elements[i].node(list_1[j])].m_position.data();
+			ibo_ptr_lines[12 * i + 2 * j + 0] = m_index_vertices + elements[i].node(list_1[(j + 0) % 6]);
+			ibo_ptr_lines[12 * i + 2 * j + 1] = m_index_vertices + elements[i].node(list_1[(j + 1) % 6]);
+		}
+		canvas::objects::Tessellator(vertices, loops, 1, triangles).tessellate();
+		for(uint32_t j = 0; j < 4; j++)
+		{
+			ibo_ptr_triangles[12 * i + 3 * j + 0] = m_index_vertices + nn + elements[i].node(list_2[triangles[3 * j + 0]]);
+			ibo_ptr_triangles[12 * i + 3 * j + 1] = m_index_vertices + nn + elements[i].node(list_2[triangles[3 * j + 1]]);
+			ibo_ptr_triangles[12 * i + 3 * j + 2] = m_index_vertices + nn + elements[i].node(list_2[triangles[3 * j + 2]]);
+		}
 	}
 	//update
-	m_index_vertices += nn;
-	m_index_lines += 2 * ne;
+	m_index_lines += 12 * ne;
+	m_index_vertices += 2 * nn;
+	m_index_triangles += 12 * ne;
 }

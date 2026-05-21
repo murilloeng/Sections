@@ -1,3 +1,6 @@
+//std
+#include <cstdio>
+
 //Sections
 #include "Sections/inc/Node.hpp"
 
@@ -41,5 +44,18 @@ namespace sections
 	double Node::warping_gradient(uint32_t index_warping, uint32_t index_coordinate) const
 	{
 		return m_warping_gradient[3 * index_warping + index_coordinate];
+	}
+
+	//print
+	void Node::print(void) const
+	{
+		//position
+		printf("Position: ");
+		for(const double& position : m_position) printf("%+.6e ", position);
+		//warping
+		printf("Warping:");
+		for(const double& warping : m_warping) printf("%+.6e ", warping);
+		//end line
+		printf("\n");
 	}
 }

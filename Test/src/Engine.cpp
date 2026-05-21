@@ -104,7 +104,7 @@ void Engine::setup_glfw(void)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	m_window = glfwCreateWindow(900, 900, "Dome", nullptr, nullptr);
+	m_window = glfwCreateWindow(900, 900, "Sections", nullptr, nullptr);
 	if(!m_window)
 	{
 		glfwTerminate();

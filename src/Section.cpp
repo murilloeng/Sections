@@ -137,7 +137,7 @@ namespace sections
 			{
 				for(uint32_t k = 0; k < 6; k++)
 				{
-					m_elements[j].m_nodes[k] = nodes[i][6 * j + k];
+					m_elements[j].m_nodes[k] = nodes[i][6 * j + k] - 1;
 				}
 			}
 		}

@@ -25,6 +25,9 @@ namespace sections
 
 		const double* warping_gradient(void) const;
 		double warping_gradient(uint32_t, uint32_t) const;
+
+		//print
+		void print(void) const;
 	
 	private:
 		//data
