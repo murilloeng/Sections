@@ -86,6 +86,13 @@ namespace sections
 	//analysis
 	void Section::compute(void)
 	{
+		setup_mesh();
+		compute_area();
+	}
+
+	//mesh
+	void Section::setup_mesh(void)
+	{
 		//initialize
 		gmsh::initialize();
 		//model
@@ -102,8 +109,6 @@ namespace sections
 		//finalize
 		gmsh::finalize();
 	}
-
-	//setup
 	void Section::setup_nodes(void)
 	{
 		//mesh
@@ -135,10 +140,29 @@ namespace sections
 			m_elements.resize(tags[i].size());
 			for(uint32_t j = 0; j < tags[i].size(); j++)
 			{
+				m_elements[i].m_section = this;
 				for(uint32_t k = 0; k < 6; k++)
 				{
 					m_elements[j].m_nodes[k] = nodes[i][6 * j + k] - 1;
 				}
+			}
+		}
+	}
+
+	//compute
+	void Section::compute_area(void)
+	{
+		//data
+		double d, w, p[2], J[4];
+		//area
+		m_area = 0;
+		for(const Element& element : m_elements)
+		{
+			for(uint32_t i = 0; i < 4; i++)
+			{
+				w = element.point(p, i);
+				d = element.jacobian(J, p);
+				m_area += w * d;
 			}
 		}
 	}

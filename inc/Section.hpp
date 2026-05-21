@@ -43,9 +43,13 @@ namespace sections
 		void compute(void);
 
 	protected:
-		//setup
+		//mesh
+		void setup_mesh(void);
 		void setup_nodes(void);
 		void setup_elements(void);
+
+		//compute
+		void compute_area(void);
 
 		//geometry
 		virtual void setup_geometry(void) const = 0;
