@@ -121,8 +121,7 @@ void Draw::update_elements(void)
 	uint32_t triangles[12];
 	canvas::vec2 vertices[6];
 	const uint32_t loops[] = {0, 6};
-	const uint32_t list_1[] = {0, 3, 1, 4, 2, 5};
-	const uint32_t list_2[] = {0, 2, 4, 1, 3, 5};
+	const uint32_t list[] = {0, 3, 1, 4, 2, 5};
 	const uint64_t nn = m_section->nodes().size();
 	const uint64_t ne = m_section->elements().size();
 	const std::vector<sections::Node>& nodes = m_section->nodes();
@@ -145,16 +144,17 @@ void Draw::update_elements(void)
 	{
 		for(uint32_t j = 0; j < 6; j++)
 		{
-			vertices[j] = vbo_ptr[elements[i].node(list_1[j])].m_position.data();
-			ibo_ptr_lines[12 * i + 2 * j + 0] = m_index_vertices + elements[i].node(list_1[(j + 0) % 6]);
-			ibo_ptr_lines[12 * i + 2 * j + 1] = m_index_vertices + elements[i].node(list_1[(j + 1) % 6]);
+			vertices[j][0] = vbo_ptr[elements[i].node(list[j])].m_position[0];
+			vertices[j][1] = vbo_ptr[elements[i].node(list[j])].m_position[1];
+			ibo_ptr_lines[12 * i + 2 * j + 0] = m_index_vertices + elements[i].node(list[(j + 0) % 6]);
+			ibo_ptr_lines[12 * i + 2 * j + 1] = m_index_vertices + elements[i].node(list[(j + 1) % 6]);
 		}
 		canvas::objects::Tessellator(vertices, loops, 1, triangles).tessellate();
 		for(uint32_t j = 0; j < 4; j++)
 		{
-			ibo_ptr_triangles[12 * i + 3 * j + 0] = m_index_vertices + nn + elements[i].node(list_2[triangles[3 * j + 0]]);
-			ibo_ptr_triangles[12 * i + 3 * j + 1] = m_index_vertices + nn + elements[i].node(list_2[triangles[3 * j + 1]]);
-			ibo_ptr_triangles[12 * i + 3 * j + 2] = m_index_vertices + nn + elements[i].node(list_2[triangles[3 * j + 2]]);
+			ibo_ptr_triangles[12 * i + 3 * j + 0] = m_index_vertices + nn + elements[i].node(list[triangles[3 * j + 0]]);
+			ibo_ptr_triangles[12 * i + 3 * j + 1] = m_index_vertices + nn + elements[i].node(list[triangles[3 * j + 1]]);
+			ibo_ptr_triangles[12 * i + 3 * j + 2] = m_index_vertices + nn + elements[i].node(list[triangles[3 * j + 2]]);
 		}
 	}
 	//update

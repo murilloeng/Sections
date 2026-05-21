@@ -7,7 +7,7 @@
 namespace sections
 {
 	//constructor
-	Rectangle::Rectangle(void) : m_width{0}, m_height{0}
+	Rectangle::Rectangle(void) : m_width{2.00e-01}, m_height{6.00e-01}
 	{
 		return;
 	}

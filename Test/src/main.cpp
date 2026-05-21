@@ -3,6 +3,7 @@
 #include <cstdlib>
 
 //Sections
+#include "Sections/inc/RHS.hpp"
 #include "Sections/inc/Rectangle.hpp"
 #include "Sections/Test/inc/Engine.hpp"
 
@@ -22,10 +23,9 @@ int main(void)
 	try
 	{
 		//data
-		sections::Rectangle section;
-		//setup
-		section.width(0.20);
-		section.height(0.60);
+		sections::RHS section;
+		// section.radius_inner(0);
+		// section.radius_outer(0);
 		//compute
 		section.compute();
 		//draw
