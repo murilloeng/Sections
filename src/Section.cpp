@@ -120,9 +120,17 @@ namespace sections
 		std::vector<std::vector<std::size_t>> nodes;
 		gmsh::model::mesh::getElements(types, tags, nodes);
 		//elements
-		for(int32_t type : types)
+		for(uint32_t i = 0; i < types.size(); i++)
 		{
-			if(type != 9) continue;
+			if(types[i] != 9) continue;
+			m_elements.resize(tags[i].size());
+			for(uint32_t j = 0; j < tags[i].size(); j++)
+			{
+				for(uint32_t k = 0; k < 6; k++)
+				{
+					m_elements[j].m_nodes[k] = nodes[i][6 * j + k];
+				}
+			}
 		}
 	}
 }

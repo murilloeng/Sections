@@ -5,6 +5,8 @@
 
 namespace sections
 {
+	class Section;
+
 	class Element
 	{
 	public:
@@ -21,5 +23,8 @@ namespace sections
 	private:
 		//data
 		uint32_t m_nodes[6];
+
+		//friends
+		friend class Section;
 	};
 }
