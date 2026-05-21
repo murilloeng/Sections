@@ -2,8 +2,6 @@
 
 //Sections
 #include "Sections/inc/Section.hpp"
-
-//Test
 #include "Sections/Test/inc/What.hpp"
 
 //Canvas

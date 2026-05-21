@@ -4,6 +4,18 @@
 
 //Sections
 #include "Sections/inc/Rectangle.hpp"
+#include "Sections/Test/inc/Engine.hpp"
+
+//draw
+void draw(sections::Section* section)
+{
+	//data
+	Engine engine;
+	engine.show_fps(false);
+	engine.section(section);
+	//start
+	engine.start();
+}
 
 int main(void)
 {
@@ -16,6 +28,8 @@ int main(void)
 		section.height(0.60);
 		//compute
 		section.compute();
+		//draw
+		draw(&section);
 	}
 	catch(const std::exception& exception)
 	{

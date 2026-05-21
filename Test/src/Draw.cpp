@@ -1,7 +1,5 @@
 //Sections
 #include "Sections/inc/Section.hpp"
-
-//Test
 #include "Sections/Test/inc/Draw.hpp"
 
 //Canvas
