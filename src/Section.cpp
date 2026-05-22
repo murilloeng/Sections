@@ -140,7 +140,7 @@ namespace sections
 			m_elements.resize(tags[i].size());
 			for(uint32_t j = 0; j < tags[i].size(); j++)
 			{
-				m_elements[i].m_section = this;
+				m_elements[j].m_section = this;
 				for(uint32_t k = 0; k < 6; k++)
 				{
 					m_elements[j].m_nodes[k] = nodes[i][6 * j + k] - 1;

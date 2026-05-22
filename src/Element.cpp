@@ -1,4 +1,5 @@
 //std
+#include <cmath>
 #include <cstdio>
 
 //Sections
@@ -18,6 +19,8 @@ static const double A[] = {
 	+2, +2, +2, +0, +2, +0,
 	+0, -2, -2, +0, -2, -2
 };
+static const double w[] = {1, 1};
+static const double s[] = {-sqrt(3) / 3, +sqrt(3) / 3};
 
 namespace sections
 {
@@ -59,16 +62,11 @@ namespace sections
 		//data
 		const uint32_t i = index / 2;
 		const uint32_t j = index % 2;
-		//quadrature
-		const double e = m_quadrature.point(i);
-		const double n = m_quadrature.point(j);
-		const double wi = m_quadrature.weight(i);
-		const double wj = m_quadrature.weight(j);
 		//point
-		p[0] = (1 + e) * (1 + n) / 2 - 1;
-		p[1] = (1 - e) * (1 + n) / 2 - 1;
+		p[0] = (1 + s[i]) * (1 + s[j]) / 2 - 1;
+		p[1] = (1 - s[i]) * (1 + s[j]) / 2 - 1;
 		//return
-		return wi * wj * (1 + n) / 2;
+		return w[i] * w[j] * (1 + s[j]) / 2;
 	}
 	double* Element::function(double* N, const double* p) const
 	{
@@ -119,22 +117,21 @@ namespace sections
 		//positions
 		for(uint32_t i = 0; i < 6; i++)
 		{
-			P[2 * i + 0] = nodes[m_nodes[i]].position(0);
-			P[2 * i + 1] = nodes[m_nodes[i]].position(1);
+			P[0 + 2 * i] = nodes[m_nodes[i]].position(0);
+			P[1 + 2 * i] = nodes[m_nodes[i]].position(1);
 		}
 	}
 	double Element::jacobian(double* J, const double* p) const
 	{
-		//data
-		double B[12], P[12];
-		//jacobian
+		//positions
+		double P[12];
 		positions(P);
+		//gradient
+		double B[12];
 		gradient(B, p);
+		//jacobian
 		math::matrix(J, 2, 2) = math::matrix(P, 2, 6) * math::matrix(B, 6, 2);
 		//return
 		return math::matrix(J, 2, 2).determinant();
 	}
-
-	//static data
-	math::quadrature::Quadrature Element::m_quadrature(2);
 }
