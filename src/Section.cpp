@@ -1,4 +1,4 @@
-//strd
+//std
 #include <cfloat>
 
 //gmsh
@@ -6,6 +6,9 @@
 
 //Sections
 #include "Sections/inc/Section.hpp"
+
+//Math
+#include "Math/inc/solvers/bisection.hpp"
 
 namespace sections
 {
@@ -102,8 +105,12 @@ namespace sections
 		printf("Area: %+.2e\n", m_area);
 		printf("Inertia 2: %+.2e\n", m_inertia[0]);
 		printf("Inertia 3: %+.2e\n", m_inertia[1]);
+		printf("Plastic center 2: %+.2e\n", m_plastic_center[0]);
+		printf("Plastic center 3: %+.2e\n", m_plastic_center[1]);
 		printf("Elastic modulus 2: %+.2e\n", m_elastic_modulus[0]);
 		printf("Elastic modulus 3: %+.2e\n", m_elastic_modulus[1]);
+		printf("Plastic modulus 2: %+.2e\n", m_plastic_modulus[0]);
+		printf("Plastic modulus 3: %+.2e\n", m_plastic_modulus[1]);
 	}
 
 	//mesh
@@ -184,6 +191,7 @@ namespace sections
 	}
 	void Section::compute_center(void)
 	{
+		//center
 		double xc[] = {0, 0};
 		double d, w, p[2], x[2];
 		for(const Element& element : m_elements)
@@ -241,7 +249,34 @@ namespace sections
 	void Section::compute_plastic_center(void)
 	{
 		//data
-		double xl[] = {+DBL_MAX, -DBL_MAX, +DBL_MAX, -DBL_MAX};
+		double x2_min = +DBL_MAX;
+		double x2_max = -DBL_MAX;
+		double x3_min = +DBL_MAX;
+		double x3_max = -DBL_MAX;
+		const void* args[] = { this };
+		math::bisection solver_2, solver_3;
+		//bounds
+		for(const Node& node : m_nodes)
+		{
+			x2_min = fmin(x2_min, node.m_position[1]);
+			x2_max = fmax(x2_max, node.m_position[1]);
+			x3_min = fmin(x3_min, node.m_position[0]);
+			x3_max = fmax(x3_max, node.m_position[0]);
+		}
+		//setup
+		solver_2.m_x1 = x2_min;
+		solver_2.m_x2 = x2_max;
+		solver_3.m_x1 = x3_min;
+		solver_3.m_x2 = x3_max;
+		solver_2.m_tolerance = 1.00e-5 * m_area;
+		solver_3.m_tolerance = 1.00e-5 * m_area;
+		solver_2.m_system_2 = Section::plastic_center_function_2;
+		solver_3.m_system_2 = Section::plastic_center_function_3;
+		//solve
+		solver_2.solve(args);
+		solver_3.solve(args);
+		m_plastic_center[0] = solver_3.m_xs;
+		m_plastic_center[1] = solver_2.m_xs;
 	}
 	void Section::compute_elastic_modulus(void)
 	{
@@ -256,6 +291,67 @@ namespace sections
 	}
 	void Section::compute_plastic_modulus(void)
 	{
-		return;
+		//data
+		double d, w, p[2], x[2];
+		//plastic modulus
+		m_plastic_modulus[0] = 0;
+		m_plastic_modulus[1] = 0;
+		for(const Element& element : m_elements)
+		{
+			for(uint32_t i = 0; i < 4; i++)
+			{
+				//point
+				w = element.point(p, i);
+				d = element.jacobian(p);
+				//plastic modulus
+				element.position(x, p);
+				m_plastic_modulus[0] += w * d * fabs(x[0] - m_plastic_center[0]);
+				m_plastic_modulus[1] += w * d * fabs(x[1] - m_plastic_center[1]);
+			}
+		}
+	}
+
+	//plastic center
+	double Section::plastic_center_function_2(double x2, const void** args)
+	{
+		//data
+		double A1 = 0, A2 = 0, d, w, p[2], x[2];
+		const Section* section = (const Section*) args[0];
+		//area
+		for(const Element& element : section->m_elements)
+		{
+			for(uint32_t i = 0; i < 4; i++)
+			{
+				//point
+				w = element.point(p, i);
+				d = element.jacobian(p);
+				//area
+				element.position(x, p);
+				(x[1] < x2 ? A1 : A2) += w * d;
+			}
+		}
+		//return
+		return A2 - A1;
+	}
+	double Section::plastic_center_function_3(double x3, const void** args)
+	{
+		//data
+		double A1 = 0, A2 = 0, d, w, p[2], x[2];
+		const Section* section = (const Section*) args[0];
+		//area
+		for(const Element& element : section->m_elements)
+		{
+			for(uint32_t i = 0; i < 4; i++)
+			{
+				//point
+				w = element.point(p, i);
+				d = element.jacobian(p);
+				//area
+				element.position(x, p);
+				(x[0] < x3 ? A1 : A2) += w * d;
+			}
+		}
+		//return
+		return A2 - A1;
 	}
 }

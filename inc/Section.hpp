@@ -62,6 +62,10 @@ namespace sections
 		//geometry
 		virtual void setup_geometry(void) const = 0;
 
+		//plastic center
+		static double plastic_center_function_2(double, const void**);
+		static double plastic_center_function_3(double, const void**);
+
 		//data
 		bool m_status;
 		double m_mesh_size;
