@@ -38,9 +38,12 @@ namespace sections
 
 		const std::vector<Node>& nodes(void) const;
 		const std::vector<Element>& elements(void) const;
-
+		
 		//compute
 		void compute(void);
+
+		//print
+		void print(void) const;
 
 	protected:
 		//mesh
@@ -50,6 +53,11 @@ namespace sections
 
 		//compute
 		void compute_area(void);
+		void compute_center(void);
+		void compute_inertia(void);
+		void compute_plastic_center(void);
+		void compute_elastic_modulus(void);
+		void compute_plastic_modulus(void);
 
 		//geometry
 		virtual void setup_geometry(void) const = 0;
@@ -59,11 +67,12 @@ namespace sections
 		double m_mesh_size;
 
 		double m_area;
-		double m_inertia[3];
+		double m_inertia[2];
 		double m_shear_area[3];
 		double m_shear_center[2];
 		double m_torsion_constant;
 		double m_warping_constant;
+		double m_plastic_center[2];
 		double m_elastic_modulus[2];
 		double m_plastic_modulus[2];
 

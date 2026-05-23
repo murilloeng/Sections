@@ -27,10 +27,11 @@ namespace sections
 		double point(double*, uint32_t) const;
 		double* function(double*, const double*) const;
 		double* gradient(double*, const double*) const;
+		double* position(double*, const double*) const;
 
 		//jacobian
 		void positions(double*) const;
-		double jacobian(double*, const double*) const;
+		double jacobian(const double*) const;
 
 	private:
 		//data

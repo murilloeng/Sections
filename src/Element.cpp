@@ -108,6 +108,22 @@ namespace sections
 		//return
 		return B;
 	}
+	double* Element::position(double* x, const double* p) const
+	{
+		//data
+		double N[6];
+		const std::vector<Node>& nodes = m_section->nodes();
+		//position
+		function(N, p);
+		x[0] = x[1] = 0;
+		for(uint32_t i = 0; i < 6; i++)
+		{
+			x[0] += N[i] * nodes[m_nodes[i]].position(0);
+			x[1] += N[i] * nodes[m_nodes[i]].position(1);
+		}
+		//return
+		return x;
+	}
 
 	//jacobian
 	void Element::positions(double* P) const
@@ -121,17 +137,16 @@ namespace sections
 			P[1 + 2 * i] = nodes[m_nodes[i]].position(1);
 		}
 	}
-	double Element::jacobian(double* J, const double* p) const
+	double Element::jacobian(const double* p) const
 	{
-		//positions
-		double P[12];
-		positions(P);
-		//gradient
-		double B[12];
-		gradient(B, p);
+		//data
+		double P[12], B[12];
+		math::matrix J(2, 2);
 		//jacobian
-		math::matrix(J, 2, 2) = math::matrix(P, 2, 6) * math::matrix(B, 6, 2);
+		positions(P);
+		gradient(B, p);
+		J = math::matrix(P, 2, 6) * math::matrix(B, 6, 2);
 		//return
-		return math::matrix(J, 2, 2).determinant();
+		return J.determinant();
 	}
 }

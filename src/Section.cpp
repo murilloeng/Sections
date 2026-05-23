@@ -1,3 +1,6 @@
+//strd
+#include <cfloat>
+
 //gmsh
 #include <gmsh.h>
 
@@ -8,11 +11,9 @@ namespace sections
 {
 	//constructor
 	Section::Section(void) : 
-		m_status{false}, m_mesh_size{0},
-		m_area{0}, m_inertia{0, 0, 0},
-		m_shear_area{0, 0, 0}, m_shear_center{0, 0},
-		m_torsion_constant{0}, m_warping_constant{0}, 
-		m_elastic_modulus{0, 0}, m_plastic_modulus{0, 0}
+		m_status{false}, m_mesh_size{0}, m_area{0}, m_inertia{0, 0},
+		m_shear_area{0, 0, 0}, m_shear_center{0, 0}, m_torsion_constant{0}, m_warping_constant{0}, 
+		m_plastic_center{0, 0}, m_elastic_modulus{0, 0}, m_plastic_modulus{0, 0}
 	{
 		return;
 	}
@@ -88,6 +89,21 @@ namespace sections
 	{
 		setup_mesh();
 		compute_area();
+		compute_center();
+		compute_inertia();
+		compute_plastic_center();
+		compute_elastic_modulus();
+		compute_plastic_modulus();
+	}
+
+	//print
+	void Section::print(void) const
+	{
+		printf("Area: %+.2e\n", m_area);
+		printf("Inertia 2: %+.2e\n", m_inertia[0]);
+		printf("Inertia 3: %+.2e\n", m_inertia[1]);
+		printf("Elastic modulus 2: %+.2e\n", m_elastic_modulus[0]);
+		printf("Elastic modulus 3: %+.2e\n", m_elastic_modulus[1]);
 	}
 
 	//mesh
@@ -152,18 +168,94 @@ namespace sections
 	//compute
 	void Section::compute_area(void)
 	{
-		//data
-		double d, w, p[2], J[4];
-		//area
 		m_area = 0;
+		double d, w, p[2];
 		for(const Element& element : m_elements)
 		{
 			for(uint32_t i = 0; i < 4; i++)
 			{
+				//point
 				w = element.point(p, i);
-				d = element.jacobian(J, p);
+				d = element.jacobian(p);
+				//area
 				m_area += w * d;
 			}
 		}
+	}
+	void Section::compute_center(void)
+	{
+		double xc[] = {0, 0};
+		double d, w, p[2], x[2];
+		for(const Element& element : m_elements)
+		{
+			for(uint32_t i = 0; i < 4; i++)
+			{
+				//point
+				w = element.point(p, i);
+				d = element.jacobian(p);
+				//moment
+				element.position(x, p);
+				xc[0] += w * d * x[0] / m_area;
+				xc[1] += w * d * x[1] / m_area;
+			}
+		}
+		//apply
+		for(Node& node : m_nodes)
+		{
+			node.m_position[0] -= xc[0];
+			node.m_position[1] -= xc[1];
+		}
+	}
+	void Section::compute_inertia(void)
+	{
+		//inertia
+		double d, w, p[2], x[2];
+		double inertia[3] = {0, 0, 0};
+		for(const Element& element : m_elements)
+		{
+			for(uint32_t i = 0; i < 4; i++)
+			{
+				//point
+				w = element.point(p, i);
+				d = element.jacobian(p);
+				//inertia
+				element.position(x, p);
+				inertia[0] += w * d * x[0] * x[0];
+				inertia[1] += w * d * x[1] * x[1];
+				inertia[2] += w * d * x[0] * x[1];
+			}
+		}
+		//principal
+		const double t = atan(2 * inertia[2] / (inertia[0] - inertia[1]));
+		m_inertia[0] = (inertia[0] + inertia[1]) / 2 + cos(t) * (inertia[0] - inertia[1]) / 2 + sin(t) * inertia[2];
+		m_inertia[1] = (inertia[0] + inertia[1]) / 2 + cos(t) * (inertia[1] - inertia[0]) / 2 - sin(t) * inertia[2];
+		//rotation
+		for(Node& node : m_nodes)
+		{
+			const double x2 = node.m_position[1];
+			const double x3 = node.m_position[0];
+			node.m_position[0] = cos(t / 2) * x3 + sin(t / 2) * x2;
+			node.m_position[1] = cos(t / 2) * x2 - sin(t / 2) * x3;
+		}
+	}
+	void Section::compute_plastic_center(void)
+	{
+		//data
+		double xl[] = {+DBL_MAX, -DBL_MAX, +DBL_MAX, -DBL_MAX};
+	}
+	void Section::compute_elastic_modulus(void)
+	{
+		double distance[] = {0, 0};
+		for(const Node& node : m_nodes)
+		{
+			distance[0] = fmax(distance[0], fabs(node.m_position[0]));
+			distance[1] = fmax(distance[1], fabs(node.m_position[1]));
+		}
+		m_elastic_modulus[0] = m_inertia[0] / distance[0];
+		m_elastic_modulus[1] = m_inertia[1] / distance[1];
+	}
+	void Section::compute_plastic_modulus(void)
+	{
+		return;
 	}
 }

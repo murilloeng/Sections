@@ -24,11 +24,10 @@ int main(void)
 	{
 		//data
 		sections::Rectangle section;
-		// section.radius_inner(0);
-		// section.radius_outer(0);
 		//compute
 		section.compute();
-		printf("area: %+.2e\n", section.area());
+		//print
+		section.print();
 		//draw
 		draw(&section);
 	}
