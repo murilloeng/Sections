@@ -55,9 +55,13 @@ namespace sections
 		void compute_area(void);
 		void compute_center(void);
 		void compute_inertia(void);
+		void compute_warping(void);
 		void compute_plastic_center(void);
 		void compute_elastic_modulus(void);
 		void compute_plastic_modulus(void);
+
+		//warping
+		void adjust_stiffness(double*) const;
 
 		//geometry
 		virtual void setup_geometry(void) const = 0;

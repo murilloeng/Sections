@@ -1,5 +1,6 @@
 //std
 #include <cfloat>
+#include <cstring>
 
 //gmsh
 #include <gmsh.h>
@@ -9,6 +10,12 @@
 
 //Math
 #include "Math/inc/solvers/bisection.hpp"
+
+//extern
+extern "C"
+{
+	void dsysv_(const char*, const uint32_t*, const uint32_t*, double*, const uint32_t*, int32_t*, double*, const uint32_t*, double*, const int32_t*, int32_t*);
+}
 
 namespace sections
 {
@@ -94,6 +101,7 @@ namespace sections
 		compute_area();
 		compute_center();
 		compute_inertia();
+		compute_warping();
 		compute_plastic_center();
 		compute_elastic_modulus();
 		compute_plastic_modulus();
@@ -246,6 +254,39 @@ namespace sections
 			node.m_position[1] = cos(t / 2) * x2 - sin(t / 2) * x3;
 		}
 	}
+	void Section::compute_warping(void)
+	{
+		//data
+		const uint32_t nn = m_nodes.size();
+		//assemble
+		double* f = new double[3 * nn];
+		double* K = new double[nn * nn];
+		memset(f, 0, 3 * nn * sizeof(double));
+		memset(K, 0, nn * nn * sizeof(double));
+		for(const Element& element : m_elements)
+		{
+			element.assemble_force(f);
+			element.assemble_stiffness(K);
+		}
+		adjust_stiffness(K);
+		//query
+		double query;
+		int32_t status;
+		int32_t lwork = -1;
+		const uint32_t nr = 3;
+		int32_t* ipiv = new int32_t[nn];
+		dsysv_("U", &nn, &nr, K, &nn, ipiv, f, &nn, &query, &lwork, &status);
+		//solve
+		lwork = int32_t(query);
+		double* work = new double[lwork];
+		dsysv_("U", &nn, &nr, K, &nn, ipiv, f, &nn, work, &lwork, &status);
+		printf("nodes: %d status: %d\n", nn, status);
+		//delete
+		delete[] f;
+		delete[] K;
+		delete[] ipiv;
+		delete[] work;
+	}
 	void Section::compute_plastic_center(void)
 	{
 		//data
@@ -308,6 +349,24 @@ namespace sections
 				m_plastic_modulus[0] += w * d * fabs(x[0] - m_plastic_center[0]);
 				m_plastic_modulus[1] += w * d * fabs(x[1] - m_plastic_center[1]);
 			}
+		}
+	}
+
+	//warping
+	void Section::adjust_stiffness(double* K) const
+	{
+		//data
+		double v = 0;
+		const uint32_t nn = m_nodes.size();
+		//compute
+		for(uint32_t i = 0; i < nn; i++)
+		{
+			v += K[i + nn * i];
+		}
+		//adjust
+		for(uint32_t i = 0; i < nn; i++)
+		{
+			K[i + nn * i] += v / nn;
 		}
 	}
 

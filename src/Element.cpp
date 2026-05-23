@@ -140,13 +140,67 @@ namespace sections
 	double Element::jacobian(const double* p) const
 	{
 		//data
-		double P[12], B[12];
-		math::matrix J(2, 2);
+		math::matrix B(6, 2), P(2, 6);
 		//jacobian
-		positions(P);
-		gradient(B, p);
-		J = math::matrix(P, 2, 6) * math::matrix(B, 6, 2);
+		positions(P.data());
+		gradient(B.data(), p);
+		return (P * B).determinant();
+	}
+	double Element::spatial_gradient(double* Bx, const double* p) const
+	{
+		 //data
+		math::matrix J(2, 2), B(6, 2), P(2, 6);
+		//gradient
+		positions(P.data());
+		gradient(B.data(), p);
+		//gradient
+		J = P * B;
+		math::matrix(Bx, 6, 2) = B * J.inverse();
 		//return
 		return J.determinant();
+	}
+
+	//assemble
+	void Element::assemble_force(double* f) const
+	{
+		//data
+		double d, w, p[2], x[2], N[6], B[12];
+		const uint32_t nn = m_section->nodes().size();
+		//assemble
+		for(uint32_t k = 0; k < 4; k++)
+		{
+			w = point(p, k);
+			function(N, p);
+			position(x, p);
+			d = spatial_gradient(B, p);
+			for(uint32_t i = 0; i < 6; i++)
+			{
+				const uint32_t di = m_nodes[i];
+				f[di + 1 * nn] += w * d * x[1] * N[i];
+				f[di + 2 * nn] += w * d * x[0] * N[i];
+				f[di + 0 * nn] += w * d * (x[0] * B[i + 0] - x[1] * B[i + 6]);
+			}
+		}
+	}
+	void Element::assemble_stiffness(double* K) const
+	{
+		//data
+		double d, w, p[2], B[12];
+		const uint32_t nn = m_section->nodes().size();
+		//assemble
+		for(uint32_t k = 0; k < 4; k++)
+		{
+			w = point(p, k);
+			d = spatial_gradient(B, p);
+			for(uint32_t i = 0; i < 6; i++)
+			{
+				for(uint32_t j = 0; j < 6; j++)
+				{
+					const uint32_t di = m_nodes[i];
+					const uint32_t dj = m_nodes[j];
+					K[di + nn * dj] += w * d * (B[di + 0] * B[dj + 0] + B[di + 6] * B[dj + 6]);
+				}
+			}
+		}
 	}
 }
