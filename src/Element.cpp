@@ -57,10 +57,11 @@ namespace sections
 	}
 
 	//assemble
-	void Element::assemble_force(double* f) const
+	void Element::assemble_force(void) const
 	{
 		//data
-		const uint32_t nn = m_section->nodes().size();
+		double* f = m_section->m_f;
+		const uint32_t nn = m_section->m_nodes.size();
 		double d, w, p[2], x[2], J[4], N[6], Bn[12], Bs[12];
 		//assemble
 		for(uint32_t k = 0; k < 4; k++)
@@ -87,11 +88,12 @@ namespace sections
 			}
 		}
 	}
-	void Element::assemble_stiffness(double* K) const
+	void Element::assemble_stiffness(void) const
 	{
 		//data
+		double* K = m_section->m_K;
 		double d, w, p[2], J[4], Bn[12], Bs[12];
-		const uint32_t nn = m_section->nodes().size();
+		const uint32_t nn = m_section->m_nodes.size();
 		//assemble
 		for(uint32_t k = 0; k < 4; k++)
 		{
@@ -122,13 +124,10 @@ namespace sections
 	//jacobian
 	void Element::positions(double* P) const
 	{
-		//data
-		const std::vector<Node>& nodes = m_section->nodes();
-		//positions
 		for(uint32_t i = 0; i < 6; i++)
 		{
-			P[0 + 2 * i] = nodes[m_nodes[i]].position(0);
-			P[1 + 2 * i] = nodes[m_nodes[i]].position(1);
+			P[0 + 2 * i] = m_section->m_nodes[m_nodes[i]].m_position[0];
+			P[1 + 2 * i] = m_section->m_nodes[m_nodes[i]].m_position[1];
 		}
 	}
 	double Element::jacobian(const double* p) const
@@ -204,16 +203,28 @@ namespace sections
 		//return
 		return B;
 	}
+
+	double* Element::warping(double* u, const double* N) const
+	{
+		//warping
+		u[0] = u[1] = u[2] = 0;
+		for(uint32_t i = 0; i < 6; i++)
+		{
+			u[0] += N[i] * m_section->m_nodes[m_nodes[i]].m_warping[0];
+			u[1] += N[i] * m_section->m_nodes[m_nodes[i]].m_warping[1];
+			u[2] += N[i] * m_section->m_nodes[m_nodes[i]].m_warping[2];
+		}
+		//return
+		return u;
+	}
 	double* Element::position(double* x, const double* N) const
 	{
-		//data
-		const std::vector<Node>& nodes = m_section->nodes();
 		//position
 		x[0] = x[1] = 0;
 		for(uint32_t i = 0; i < 6; i++)
 		{
-			x[0] += N[i] * nodes[m_nodes[i]].position(0);
-			x[1] += N[i] * nodes[m_nodes[i]].position(1);
+			x[0] += N[i] * m_section->m_nodes[m_nodes[i]].m_position[0];
+			x[1] += N[i] * m_section->m_nodes[m_nodes[i]].m_position[1];
 		}
 		//return
 		return x;

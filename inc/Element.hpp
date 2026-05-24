@@ -25,8 +25,8 @@ namespace sections
 
 	private:
 		//assemble
-		void assemble_force(double*) const;
-		void assemble_stiffness(double*) const;
+		void assemble_force(void) const;
+		void assemble_stiffness(void) const;
 
 		//jacobian
 		void positions(double*) const;
@@ -37,6 +37,8 @@ namespace sections
 		double point(double*, uint32_t) const;
 		double* function(double*, const double*) const;
 		double* gradient(double*, const double*) const;
+
+		double* warping(double*, const double*) const;
 		double* position(double*, const double*) const;
 
 		//data

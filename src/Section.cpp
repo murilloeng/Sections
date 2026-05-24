@@ -17,9 +17,10 @@ namespace sections
 {
 	//constructor
 	Section::Section(void) : 
-		m_status{false}, m_mesh_size{0}, m_area{0}, m_inertia{0, 0},
-		m_shear_area{0, 0, 0}, m_shear_center{0, 0}, m_torsion_constant{0}, m_warping_constant{0}, 
-		m_plastic_center{0, 0}, m_elastic_modulus{0, 0}, m_plastic_modulus{0, 0}
+		m_status{false}, m_mesh_size{0}, 
+		m_u{nullptr}, m_f{nullptr}, m_K{nullptr},
+		m_area{0}, m_inertia{0, 0}, m_shear_area{0, 0, 0}, m_shear_center{0, 0}, 
+		m_torsion_constant{0}, m_warping_constant{0}, m_plastic_center{0, 0}, m_elastic_modulus{0, 0}, m_plastic_modulus{0, 0}
 	{
 		return;
 	}
@@ -27,7 +28,9 @@ namespace sections
 	//destructor
 	Section::~Section(void)
 	{
-		return;
+		delete[] m_u;
+		delete[] m_f;
+		delete[] m_K;
 	}
 
 	//data
@@ -117,7 +120,7 @@ namespace sections
 		printf("Plastic modulus 3: %+.2e\n", m_plastic_modulus[1]);
 	}
 
-	//mesh
+	//setup
 	void Section::setup_mesh(void)
 	{
 		//initialize
@@ -152,6 +155,21 @@ namespace sections
 				m_nodes[i].m_position[j] = coordinates[3 * i + j];
 			}
 		}
+	}
+	void Section::setup_warping(void)
+	{
+		//data
+		const uint32_t nn = m_nodes.size();
+		//setup
+		delete[] m_u;
+		delete[] m_f;
+		delete[] m_K;
+		m_u = new double[3 * nn];
+		m_f = new double[3 * nn];
+		m_K = new double[nn * nn];
+		memset(m_u, 0, 3 * nn * sizeof(double));
+		memset(m_f, 0, 3 * nn * sizeof(double));
+		memset(m_K, 0, nn * nn * sizeof(double));
 	}
 	void Section::setup_elements(void)
 	{
@@ -256,19 +274,30 @@ namespace sections
 	{
 		//data
 		const uint32_t nn = m_nodes.size();
-		math::matrix K(nn, nn, math::mode::zeros), f(nn, 3, math::mode::zeros), x(nn, 3);
 		//assemble
+		setup_warping();
 		for(const Element& element : m_elements)
 		{
-			element.assemble_force(f.data());
-			element.assemble_stiffness(K.data());
+			element.assemble_force();
+			element.assemble_stiffness();
 		}
-		adjust_stiffness(K.data());
+		adjust_stiffness();
 		//solve
-		if(!K.solve(x, f))
+		math::matrix u(m_u, nn, 3);
+		math::matrix f(m_f, nn, 3);
+		if(!math::matrix(m_K, nn, nn).solve(u, f))
 		{
 			throw std::runtime_error("Error: Unable to solve warping problem!");
 		}
+		//apply
+		for(uint32_t i = 0; i < nn; i++)
+		{
+			for(uint32_t j = 0; j < 3; j++)
+			{
+				m_nodes[i].m_warping[j] = m_u[i + nn * j];
+			}
+		}
+		adjust_warping();
 	}
 	void Section::compute_plastic_center(void)
 	{
@@ -337,14 +366,43 @@ namespace sections
 	}
 
 	//warping
-	void Section::adjust_stiffness(double* K) const
+	void Section::adjust_warping(void)
+	{
+		//compute
+		double Q[] = {0, 0, 0};
+		double d, w, p[2], N[6], u[3];
+		for(const Element& element : m_elements)
+		{
+			for(uint32_t k = 0; k < 4; k++)
+			{
+				//point
+				w = element.point(p, k);
+				d = element.jacobian(p);
+				//warping
+				element.function(N, p);
+				element.warping(u, N);
+				//contribution
+				Q[0] += w * d * u[0];
+				Q[1] += w * d * u[1];
+				Q[2] += w * d * u[2];
+			}
+		}
+		//adjust
+		for(Node& node : m_nodes)
+		{
+			node.m_warping[0] -= Q[0] / m_area;
+			node.m_warping[1] -= Q[1] / m_area;
+			node.m_warping[2] -= Q[2] / m_area;
+		}
+	}
+	void Section::adjust_stiffness(void)
 	{
 		//data
 		const uint32_t nn = m_nodes.size();
 		//stiffness
 		for(uint32_t i = 0; i < nn; i++)
 		{
-			K[0] += K[i + nn * i];
+			m_K[0] += m_K[i + nn * i];
 		}
 	}
 

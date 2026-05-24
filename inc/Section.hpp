@@ -46,9 +46,10 @@ namespace sections
 		void print(void) const;
 
 	protected:
-		//mesh
+		//setup
 		void setup_mesh(void);
 		void setup_nodes(void);
+		void setup_warping(void);
 		void setup_elements(void);
 
 		//compute
@@ -61,7 +62,8 @@ namespace sections
 		void compute_plastic_modulus(void);
 
 		//warping
-		void adjust_stiffness(double*) const;
+		void adjust_warping(void);
+		void adjust_stiffness(void);
 
 		//geometry
 		virtual void setup_geometry(void) const = 0;
@@ -74,6 +76,9 @@ namespace sections
 		bool m_status;
 		double m_mesh_size;
 
+		double* m_u;
+		double* m_f;
+		double* m_K;
 		double m_area;
 		double m_inertia[2];
 		double m_shear_area[3];
@@ -86,5 +91,8 @@ namespace sections
 
 		std::vector<Node> m_nodes;
 		std::vector<Element> m_elements;
+
+		//friends
+		friend class Element;
 	};
 }

@@ -5,6 +5,7 @@
 
 namespace sections
 {
+	class Element;
 	class Section;
 
 	class Node
@@ -36,6 +37,7 @@ namespace sections
 		double m_warping_gradient[6];
 
 		//friends
+		friend class Element;
 		friend class Section;
 	};
 }
