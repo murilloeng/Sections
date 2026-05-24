@@ -24,20 +24,20 @@ namespace sections
 		void print(void) const;
 
 	private:
+		//assemble
+		void assemble_force(double*) const;
+		void assemble_stiffness(double*) const;
+
+		//jacobian
+		void positions(double*) const;
+		double jacobian(const double*) const;
+		double jacobian(double*, const double*) const;
+
 		//interpolation
 		double point(double*, uint32_t) const;
 		double* function(double*, const double*) const;
 		double* gradient(double*, const double*) const;
 		double* position(double*, const double*) const;
-
-		//jacobian
-		void positions(double*) const;
-		double jacobian(const double*) const;
-		double spatial_gradient(double*, const double*) const;
-
-		//assemble
-		void assemble_force(double*) const;
-		void assemble_stiffness(double*) const;
 
 		//data
 		Section* m_section;

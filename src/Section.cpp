@@ -9,13 +9,8 @@
 #include "Sections/inc/Section.hpp"
 
 //Math
+#include "Math/inc/linear/vector.hpp"
 #include "Math/inc/solvers/bisection.hpp"
-
-//extern
-extern "C"
-{
-	void dsysv_(const char*, const uint32_t*, const uint32_t*, double*, const uint32_t*, int32_t*, double*, const uint32_t*, double*, const int32_t*, int32_t*);
-}
 
 namespace sections
 {
@@ -201,7 +196,7 @@ namespace sections
 	{
 		//center
 		double xc[] = {0, 0};
-		double d, w, p[2], x[2];
+		double d, w, p[2], x[2], N[6];
 		for(const Element& element : m_elements)
 		{
 			for(uint32_t i = 0; i < 4; i++)
@@ -210,7 +205,8 @@ namespace sections
 				w = element.point(p, i);
 				d = element.jacobian(p);
 				//moment
-				element.position(x, p);
+				element.function(N, p);
+				element.position(x, N);
 				xc[0] += w * d * x[0] / m_area;
 				xc[1] += w * d * x[1] / m_area;
 			}
@@ -225,7 +221,7 @@ namespace sections
 	void Section::compute_inertia(void)
 	{
 		//inertia
-		double d, w, p[2], x[2];
+		double d, w, p[2], x[2], N[6];
 		double inertia[3] = {0, 0, 0};
 		for(const Element& element : m_elements)
 		{
@@ -235,7 +231,8 @@ namespace sections
 				w = element.point(p, i);
 				d = element.jacobian(p);
 				//inertia
-				element.position(x, p);
+				element.function(N, p);
+				element.position(x, N);
 				inertia[0] += w * d * x[0] * x[0];
 				inertia[1] += w * d * x[1] * x[1];
 				inertia[2] += w * d * x[0] * x[1];
@@ -258,34 +255,16 @@ namespace sections
 	{
 		//data
 		const uint32_t nn = m_nodes.size();
+		math::matrix K(nn, nn, math::mode::zeros), f(nn, 3, math::mode::zeros), x(nn, 3);
 		//assemble
-		double* f = new double[3 * nn];
-		double* K = new double[nn * nn];
-		memset(f, 0, 3 * nn * sizeof(double));
-		memset(K, 0, nn * nn * sizeof(double));
 		for(const Element& element : m_elements)
 		{
-			element.assemble_force(f);
-			element.assemble_stiffness(K);
+			element.assemble_force(f.data());
+			element.assemble_stiffness(K.data());
 		}
-		adjust_stiffness(K);
-		//query
-		double query;
-		int32_t status;
-		int32_t lwork = -1;
-		const uint32_t nr = 3;
-		int32_t* ipiv = new int32_t[nn];
-		dsysv_("U", &nn, &nr, K, &nn, ipiv, f, &nn, &query, &lwork, &status);
+		adjust_stiffness(K.data());
 		//solve
-		lwork = int32_t(query);
-		double* work = new double[lwork];
-		dsysv_("U", &nn, &nr, K, &nn, ipiv, f, &nn, work, &lwork, &status);
-		printf("nodes: %d status: %d\n", nn, status);
-		//delete
-		delete[] f;
-		delete[] K;
-		delete[] ipiv;
-		delete[] work;
+		K.solve(x, f);
 	}
 	void Section::compute_plastic_center(void)
 	{
@@ -333,7 +312,7 @@ namespace sections
 	void Section::compute_plastic_modulus(void)
 	{
 		//data
-		double d, w, p[2], x[2];
+		double d, w, p[2], x[2], N[6];
 		//plastic modulus
 		m_plastic_modulus[0] = 0;
 		m_plastic_modulus[1] = 0;
@@ -345,7 +324,8 @@ namespace sections
 				w = element.point(p, i);
 				d = element.jacobian(p);
 				//plastic modulus
-				element.position(x, p);
+				element.function(N, p);
+				element.position(x, N);
 				m_plastic_modulus[0] += w * d * fabs(x[0] - m_plastic_center[0]);
 				m_plastic_modulus[1] += w * d * fabs(x[1] - m_plastic_center[1]);
 			}
@@ -356,17 +336,11 @@ namespace sections
 	void Section::adjust_stiffness(double* K) const
 	{
 		//data
-		double v = 0;
 		const uint32_t nn = m_nodes.size();
-		//compute
+		//stiffness
 		for(uint32_t i = 0; i < nn; i++)
 		{
-			v += K[i + nn * i];
-		}
-		//adjust
-		for(uint32_t i = 0; i < nn; i++)
-		{
-			K[i + nn * i] += v / nn;
+			K[0] += K[i + nn * i];
 		}
 	}
 
@@ -374,7 +348,7 @@ namespace sections
 	double Section::plastic_center_function_2(double x2, const void** args)
 	{
 		//data
-		double A1 = 0, A2 = 0, d, w, p[2], x[2];
+		double A1 = 0, A2 = 0, d, w, p[2], x[2], N[6];
 		const Section* section = (const Section*) args[0];
 		//area
 		for(const Element& element : section->m_elements)
@@ -385,7 +359,8 @@ namespace sections
 				w = element.point(p, i);
 				d = element.jacobian(p);
 				//area
-				element.position(x, p);
+				element.function(N, p);
+				element.position(x, N);
 				(x[1] < x2 ? A1 : A2) += w * d;
 			}
 		}
@@ -395,7 +370,7 @@ namespace sections
 	double Section::plastic_center_function_3(double x3, const void** args)
 	{
 		//data
-		double A1 = 0, A2 = 0, d, w, p[2], x[2];
+		double A1 = 0, A2 = 0, d, w, p[2], x[2], N[6];
 		const Section* section = (const Section*) args[0];
 		//area
 		for(const Element& element : section->m_elements)
@@ -406,7 +381,8 @@ namespace sections
 				w = element.point(p, i);
 				d = element.jacobian(p);
 				//area
-				element.position(x, p);
+				element.function(N, p);
+				element.position(x, N);
 				(x[0] < x3 ? A1 : A2) += w * d;
 			}
 		}

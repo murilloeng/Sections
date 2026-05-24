@@ -25,6 +25,7 @@ int main(void)
 	{
 		//data
 		sections::ProfileT section;
+		section.mesh_size(50);
 		//compute
 		section.radius(0);
 		section.compute();
