@@ -1,6 +1,7 @@
 //std
 #include <cfloat>
 #include <cstring>
+#include <stdexcept>
 
 //gmsh
 #include <gmsh.h>
@@ -264,7 +265,10 @@ namespace sections
 		}
 		adjust_stiffness(K.data());
 		//solve
-		K.solve(x, f);
+		if(!K.solve(x, f))
+		{
+			throw std::runtime_error("Error: Unable to solve warping problem!");
+		}
 	}
 	void Section::compute_plastic_center(void)
 	{
