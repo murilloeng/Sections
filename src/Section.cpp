@@ -275,9 +275,6 @@ namespace sections
 	}
 	void Section::compute_properties(void)
 	{
-		double& A2 = m_shear_area[0];
-		double& A3 = m_shear_area[1];
-		double& Am = m_shear_area[2];
 		double& c2 = m_shear_center[0];
 		double& c3 = m_shear_center[1];
 		const double I2 = m_inertia[0];
@@ -287,11 +284,11 @@ namespace sections
 		{
 			element.warping_properties(H);
 		}
-		c2 = H[0] / I2;
-		c3 = H[1] / I3;
-		A2 = +I3 * I3 * H[3] / (H[2] * H[3] - H[4] * H[4]);
-		A3 = +I2 * I2 * H[2] / (H[2] * H[3] - H[4] * H[4]);
-		Am = -I2 * I3 * H[4] / (H[2] * H[3] - H[4] * H[4]);
+		m_shear_center[0] = H[0] / I2;
+		m_shear_center[1] = H[1] / I3;
+		m_shear_area[0] = +I3 * I3 * H[3] / (H[2] * H[3] - H[4] * H[4]);
+		m_shear_area[1] = +I2 * I2 * H[2] / (H[2] * H[3] - H[4] * H[4]);
+		m_shear_area[2] = -I2 * I3 * H[4] / (H[2] * H[3] - H[4] * H[4]);
 		m_warping_constant = H[5] - c2 * c2 * I2 - c3 * c3 * I3;
 		m_torsion_constant = I2 + I3 - math::vector(m_f, m_nodes.size()).inner(m_u);
 	}
