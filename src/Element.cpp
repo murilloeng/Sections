@@ -56,6 +56,46 @@ namespace sections
 		printf("\n");
 	}
 
+	//warping
+	void Element::warping_center(double* Q) const
+	{
+		double d, w, p[2], N[6], u[3];
+		for(uint32_t k = 0; k < 4; k++)
+		{
+			//point
+			w = point(p, k);
+			d = jacobian(p);
+			//function
+			function(N, p);
+			//warping
+			warping(u, N);
+			Q[0] += w * d * u[0];
+			Q[1] += w * d * u[1];
+			Q[2] += w * d * u[2];
+		}
+	}
+	void Element::warping_properties(double* H) const
+	{
+		double d, w;
+		double p[2], N[6], x[2], u[3];
+		for(uint32_t k = 0; k < 4; k++)
+		{
+			//point
+			w = point(p, k);
+			d = jacobian(p);
+			//function
+			function(N, p);
+			//warping
+			warping(u, N);
+			position(x, N);
+			H[0] -= w * d * x[1] * u[0];
+			H[1] += w * d * x[0] * u[0];
+			H[2] += w * d * x[0] * u[1];
+			H[3] += w * d * x[1] * u[2];
+			H[4] += w * d * x[0] * u[2];
+		}
+	}
+
 	//assemble
 	void Element::assemble_force(void) const
 	{
@@ -118,6 +158,99 @@ namespace sections
 					K[di + nn * dj] += w * d * Bs[i + 6] * Bs[j + 6];
 				}
 			}
+		}
+	}
+
+	//compute
+	void Element::compute_area(double& A) const
+	{
+		double d, w, p[2];
+		for(uint32_t k = 0; k < 4; k++)
+		{
+			//point
+			w = point(p, k);
+			d = jacobian(p);
+			//area
+			A += w * d;
+		}
+	}
+	void Element::compute_center(double* Q) const
+	{
+		double d, w, p[2], N[6], x[2];
+		for(uint32_t k = 0; k < 4; k++)
+		{
+			//point
+			w = point(p, k);
+			d = jacobian(p);
+			//position
+			function(N, p);
+			position(x, N);
+			//center
+			Q[0] += w * d * x[0];
+			Q[1] += w * d * x[1];
+		}
+	}
+	void Element::compute_inertia(double* I) const
+	{
+		double d, w, p[2], N[6], x[2];
+		for(uint32_t k = 0; k < 4; k++)
+		{
+			//point
+			w = point(p, k);
+			d = jacobian(p);
+			//position
+			function(N, p);
+			position(x, N);
+			//inertia
+			I[0] += w * d * x[1] * x[1];
+			I[1] += w * d * x[0] * x[0];
+			I[2] += w * d * x[0] * x[1];
+		}
+	}
+	void Element::compute_plastic_modulus(double* Z) const
+	{
+		double d, w, p[2], N[6], x[2];
+		for(uint32_t k = 0; k < 4; k++)
+		{
+			//point
+			w = point(p, k);
+			d = jacobian(p);
+			//position
+			function(N, p);
+			position(x, N);
+			//inertia
+			Z[0] += w * d * fabs(x[1] - m_section->m_plastic_center[1]);
+			Z[1] += w * d * fabs(x[0] - m_section->m_plastic_center[0]);
+		}
+	}
+
+	//plastic center
+	void Element::plastic_center_2(double& A, double x2) const
+	{
+		double d, w, p[2], N[6], x[2];
+		for(uint32_t k = 0; k < 4; k++)
+		{
+			//point
+			w = point(p, k);
+			d = jacobian(p);
+			//area
+			function(N, p);
+			position(x, N);
+			A += w * d * (x[0] < x2 ? -1 : +1);
+		}
+	}
+	void Element::plastic_center_3(double& A, double x3) const
+	{
+		double d, w, p[2], N[6], x[2];
+		for(uint32_t k = 0; k < 4; k++)
+		{
+			//point
+			w = point(p, k);
+			d = jacobian(p);
+			//area
+			function(N, p);
+			position(x, N);
+			A += w * d * (x[1] < x3 ? -1 : +1);
 		}
 	}
 

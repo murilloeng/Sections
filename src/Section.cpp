@@ -18,9 +18,9 @@ namespace sections
 	//constructor
 	Section::Section(void) : 
 		m_status{false}, m_mesh_size{0}, 
-		m_u{nullptr}, m_f{nullptr}, m_K{nullptr},
 		m_area{0}, m_inertia{0, 0}, m_shear_area{0, 0, 0}, m_shear_center{0, 0}, 
-		m_torsion_constant{0}, m_warping_constant{0}, m_plastic_center{0, 0}, m_elastic_modulus{0, 0}, m_plastic_modulus{0, 0}
+		m_torsion_constant{0}, m_warping_constant{0}, m_plastic_center{0, 0}, m_elastic_modulus{0, 0}, m_plastic_modulus{0, 0},
+		m_u{nullptr}, m_f{nullptr}, m_K{nullptr}
 	{
 		return;
 	}
@@ -101,6 +101,7 @@ namespace sections
 		compute_center();
 		compute_inertia();
 		compute_warping();
+		compute_properties();
 		compute_plastic_center();
 		compute_elastic_modulus();
 		compute_plastic_modulus();
@@ -112,6 +113,12 @@ namespace sections
 		printf("Area: %+.2e\n", m_area);
 		printf("Inertia 2: %+.2e\n", m_inertia[0]);
 		printf("Inertia 3: %+.2e\n", m_inertia[1]);
+		printf("Shear area 2: %+.2e\n", m_shear_area[0]);
+		printf("Shear area 3: %+.2e\n", m_shear_area[1]);
+		printf("Shear center 2: %+.2e\n", m_shear_center[0]);
+		printf("Shear center 3: %+.2e\n", m_shear_center[1]);
+		printf("Torsion constant: %+.2e\n", m_torsion_constant);
+		printf("Warping constant: %+.2e\n", m_warping_constant);
 		printf("Plastic center 2: %+.2e\n", m_plastic_center[0]);
 		printf("Plastic center 3: %+.2e\n", m_plastic_center[1]);
 		printf("Elastic modulus 2: %+.2e\n", m_elastic_modulus[0]);
@@ -150,10 +157,8 @@ namespace sections
 		m_nodes.resize(tags.size());
 		for(std::size_t i = 0; i < tags.size(); i++)
 		{
-			for(uint32_t j = 0; j < 2; j++)
-			{
-				m_nodes[i].m_position[j] = coordinates[3 * i + j];
-			}
+			m_nodes[i].m_position[0] = +coordinates[3 * i + 1];
+			m_nodes[i].m_position[1] = -coordinates[3 * i + 0];
 		}
 	}
 	void Section::setup_warping(void)
@@ -198,76 +203,45 @@ namespace sections
 	void Section::compute_area(void)
 	{
 		m_area = 0;
-		double d, w, p[2];
 		for(const Element& element : m_elements)
 		{
-			for(uint32_t i = 0; i < 4; i++)
-			{
-				//point
-				w = element.point(p, i);
-				d = element.jacobian(p);
-				//area
-				m_area += w * d;
-			}
+			element.compute_area(m_area);
 		}
 	}
 	void Section::compute_center(void)
 	{
 		//center
-		double xc[] = {0, 0};
-		double d, w, p[2], x[2], N[6];
+		double Q[] = {0, 0};
 		for(const Element& element : m_elements)
 		{
-			for(uint32_t i = 0; i < 4; i++)
-			{
-				//point
-				w = element.point(p, i);
-				d = element.jacobian(p);
-				//moment
-				element.function(N, p);
-				element.position(x, N);
-				xc[0] += w * d * x[0] / m_area;
-				xc[1] += w * d * x[1] / m_area;
-			}
+			element.compute_center(Q);
 		}
 		//apply
 		for(Node& node : m_nodes)
 		{
-			node.m_position[0] -= xc[0];
-			node.m_position[1] -= xc[1];
+			node.m_position[0] -= Q[0] / m_area;
+			node.m_position[1] -= Q[1] / m_area;
 		}
 	}
 	void Section::compute_inertia(void)
 	{
 		//inertia
-		double d, w, p[2], x[2], N[6];
-		double inertia[3] = {0, 0, 0};
+		double I[] = {0, 0, 0};
 		for(const Element& element : m_elements)
 		{
-			for(uint32_t i = 0; i < 4; i++)
-			{
-				//point
-				w = element.point(p, i);
-				d = element.jacobian(p);
-				//inertia
-				element.function(N, p);
-				element.position(x, N);
-				inertia[0] += w * d * x[0] * x[0];
-				inertia[1] += w * d * x[1] * x[1];
-				inertia[2] += w * d * x[0] * x[1];
-			}
+			element.compute_inertia(I);
 		}
-		//principal
-		const double t = atan(2 * inertia[2] / (inertia[0] - inertia[1]));
-		m_inertia[0] = (inertia[0] + inertia[1]) / 2 + cos(t) * (inertia[0] - inertia[1]) / 2 + sin(t) * inertia[2];
-		m_inertia[1] = (inertia[0] + inertia[1]) / 2 + cos(t) * (inertia[1] - inertia[0]) / 2 - sin(t) * inertia[2];
 		//rotation
+		const double t = atan(2 * I[2] / (I[0] - I[1]));
+		m_inertia[0] = (I[0] + I[1]) / 2 + cos(t) * (I[0] - I[1]) / 2 + sin(t) * I[2];
+		m_inertia[1] = (I[0] + I[1]) / 2 + cos(t) * (I[1] - I[0]) / 2 - sin(t) * I[2];
+		//apply
 		for(Node& node : m_nodes)
 		{
-			const double x2 = node.m_position[1];
-			const double x3 = node.m_position[0];
-			node.m_position[0] = cos(t / 2) * x3 + sin(t / 2) * x2;
-			node.m_position[1] = cos(t / 2) * x2 - sin(t / 2) * x3;
+			const double x2 = node.m_position[0];
+			const double x3 = node.m_position[1];
+			node.m_position[0] = cos(t / 2) * x2 + sin(t / 2) * x3;
+			node.m_position[1] = cos(t / 2) * x3 - sin(t / 2) * x2;
 		}
 	}
 	void Section::compute_warping(void)
@@ -281,8 +255,8 @@ namespace sections
 			element.assemble_force();
 			element.assemble_stiffness();
 		}
-		adjust_stiffness();
 		//solve
+		warping_fix();
 		math::matrix u(m_u, nn, 3);
 		math::matrix f(m_f, nn, 3);
 		if(!math::matrix(m_K, nn, nn).solve(u, f))
@@ -297,7 +271,21 @@ namespace sections
 				m_nodes[i].m_warping[j] = m_u[i + nn * j];
 			}
 		}
-		adjust_warping();
+		warping_center();
+	}
+	void Section::compute_properties(void)
+	{
+		double H[] = {0, 0, 0, 0, 0, 0};
+		for(const Element& element : m_elements)
+		{
+			element.warping_properties(H);
+		}
+		m_shear_center[0] = H[0] / m_inertia[0];
+		m_shear_center[1] = H[1] / m_inertia[1];
+		m_shear_area[0] = +m_inertia[1] * m_inertia[1] * H[3] / (H[2] * H[3] - H[4] * H[4]);
+		m_shear_area[1] = +m_inertia[0] * m_inertia[0] * H[2] / (H[2] * H[3] - H[4] * H[4]);
+		m_shear_area[2] = -m_inertia[0] * m_inertia[1] * H[4] / (H[2] * H[3] - H[4] * H[4]);
+		m_torsion_constant = m_inertia[0] + m_inertia[1] - math::vector(m_f, m_nodes.size()).inner(m_u);
 	}
 	void Section::compute_plastic_center(void)
 	{
@@ -311,10 +299,10 @@ namespace sections
 		//bounds
 		for(const Node& node : m_nodes)
 		{
-			x2_min = fmin(x2_min, node.m_position[1]);
-			x2_max = fmax(x2_max, node.m_position[1]);
-			x3_min = fmin(x3_min, node.m_position[0]);
-			x3_max = fmax(x3_max, node.m_position[0]);
+			x2_min = fmin(x2_min, node.m_position[0]);
+			x2_max = fmax(x2_max, node.m_position[0]);
+			x3_min = fmin(x3_min, node.m_position[1]);
+			x3_max = fmax(x3_max, node.m_position[1]);
 		}
 		//setup
 		solver_2.m_x1 = x2_min;
@@ -328,8 +316,8 @@ namespace sections
 		//solve
 		solver_2.solve(args);
 		solver_3.solve(args);
-		m_plastic_center[0] = solver_3.m_xs;
-		m_plastic_center[1] = solver_2.m_xs;
+		m_plastic_center[0] = solver_2.m_xs;
+		m_plastic_center[1] = solver_3.m_xs;
 	}
 	void Section::compute_elastic_modulus(void)
 	{
@@ -339,63 +327,21 @@ namespace sections
 			distance[0] = fmax(distance[0], fabs(node.m_position[0]));
 			distance[1] = fmax(distance[1], fabs(node.m_position[1]));
 		}
-		m_elastic_modulus[0] = m_inertia[0] / distance[0];
-		m_elastic_modulus[1] = m_inertia[1] / distance[1];
+		m_elastic_modulus[0] = m_inertia[0] / distance[1];
+		m_elastic_modulus[1] = m_inertia[1] / distance[0];
 	}
 	void Section::compute_plastic_modulus(void)
 	{
-		//data
-		double d, w, p[2], x[2], N[6];
-		//plastic modulus
 		m_plastic_modulus[0] = 0;
 		m_plastic_modulus[1] = 0;
 		for(const Element& element : m_elements)
 		{
-			for(uint32_t i = 0; i < 4; i++)
-			{
-				//point
-				w = element.point(p, i);
-				d = element.jacobian(p);
-				//plastic modulus
-				element.function(N, p);
-				element.position(x, N);
-				m_plastic_modulus[0] += w * d * fabs(x[0] - m_plastic_center[0]);
-				m_plastic_modulus[1] += w * d * fabs(x[1] - m_plastic_center[1]);
-			}
+			element.compute_plastic_modulus(m_plastic_modulus);
 		}
 	}
 
 	//warping
-	void Section::adjust_warping(void)
-	{
-		//compute
-		double Q[] = {0, 0, 0};
-		double d, w, p[2], N[6], u[3];
-		for(const Element& element : m_elements)
-		{
-			for(uint32_t k = 0; k < 4; k++)
-			{
-				//point
-				w = element.point(p, k);
-				d = element.jacobian(p);
-				//warping
-				element.function(N, p);
-				element.warping(u, N);
-				//contribution
-				Q[0] += w * d * u[0];
-				Q[1] += w * d * u[1];
-				Q[2] += w * d * u[2];
-			}
-		}
-		//adjust
-		for(Node& node : m_nodes)
-		{
-			node.m_warping[0] -= Q[0] / m_area;
-			node.m_warping[1] -= Q[1] / m_area;
-			node.m_warping[2] -= Q[2] / m_area;
-		}
-	}
-	void Section::adjust_stiffness(void)
+	void Section::warping_fix(void)
 	{
 		//data
 		const uint32_t nn = m_nodes.size();
@@ -405,50 +351,48 @@ namespace sections
 			m_K[0] += m_K[i + nn * i];
 		}
 	}
+	void Section::warping_center(void)
+	{
+		//compute
+		double Q[] = {0, 0, 0};
+		for(const Element& element : m_elements)
+		{
+			element.warping_center(Q);
+		}
+		//adjust
+		for(Node& node : m_nodes)
+		{
+			node.m_warping[0] -= Q[0] / m_area;
+			node.m_warping[1] -= Q[1] / m_area;
+			node.m_warping[2] -= Q[2] / m_area;
+		}
+	}
 
 	//plastic center
 	double Section::plastic_center_function_2(double x2, const void** args)
 	{
 		//data
-		double A1 = 0, A2 = 0, d, w, p[2], x[2], N[6];
+		double A = 0;
 		const Section* section = (const Section*) args[0];
 		//area
 		for(const Element& element : section->m_elements)
 		{
-			for(uint32_t i = 0; i < 4; i++)
-			{
-				//point
-				w = element.point(p, i);
-				d = element.jacobian(p);
-				//area
-				element.function(N, p);
-				element.position(x, N);
-				(x[1] < x2 ? A1 : A2) += w * d;
-			}
+			element.plastic_center_2(A, x2);
 		}
 		//return
-		return A2 - A1;
+		return A;
 	}
 	double Section::plastic_center_function_3(double x3, const void** args)
 	{
 		//data
-		double A1 = 0, A2 = 0, d, w, p[2], x[2], N[6];
+		double A = 0;
 		const Section* section = (const Section*) args[0];
 		//area
 		for(const Element& element : section->m_elements)
 		{
-			for(uint32_t i = 0; i < 4; i++)
-			{
-				//point
-				w = element.point(p, i);
-				d = element.jacobian(p);
-				//area
-				element.function(N, p);
-				element.position(x, N);
-				(x[0] < x3 ? A1 : A2) += w * d;
-			}
+			element.plastic_center_3(A, x3);
 		}
 		//return
-		return A2 - A1;
+		return A;
 	}
 }

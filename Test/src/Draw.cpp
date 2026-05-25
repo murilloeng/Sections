@@ -109,7 +109,9 @@ void Draw::update_nodes(void)
 	{
 		ibo_ptr[i] = i;
 		vbo_ptr[i].m_color = "red";
-		vbo_ptr[i].m_position = nodes[i].position();
+		vbo_ptr[i].m_position[2] = 0;
+		vbo_ptr[i].m_position[0] = -nodes[i].position(1);
+		vbo_ptr[i].m_position[1] = +nodes[i].position(0);
 	}
 	//update
 	m_index_points += nn;
@@ -134,10 +136,12 @@ void Draw::update_elements(void)
 	{
 		vbo_ptr[i + 1 * nn].m_color = "blue";
 		vbo_ptr[i + 0 * nn].m_color = "white";
-		vbo_ptr[i + 0 * nn].m_position[0] = nodes[i].position(0);
-		vbo_ptr[i + 0 * nn].m_position[1] = nodes[i].position(1);
-		vbo_ptr[i + 1 * nn].m_position[0] = nodes[i].position(0);
-		vbo_ptr[i + 1 * nn].m_position[1] = nodes[i].position(1);
+		vbo_ptr[i + 0 * nn].m_position[2] = 0;
+		vbo_ptr[i + 1 * nn].m_position[2] = 0;
+		vbo_ptr[i + 0 * nn].m_position[0] = -nodes[i].position(1);
+		vbo_ptr[i + 0 * nn].m_position[1] = +nodes[i].position(0);
+		vbo_ptr[i + 1 * nn].m_position[0] = -nodes[i].position(1);
+		vbo_ptr[i + 1 * nn].m_position[1] = +nodes[i].position(0);
 	}
 	//ibo data
 	for(uint32_t i = 0; i < ne; i++)

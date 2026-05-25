@@ -24,9 +24,23 @@ namespace sections
 		void print(void) const;
 
 	private:
+		//warping
+		void warping_center(double*) const;
+		void warping_properties(double*) const;
+
 		//assemble
 		void assemble_force(void) const;
 		void assemble_stiffness(void) const;
+		
+		//compute
+		void compute_area(double&) const;
+		void compute_center(double*) const;
+		void compute_inertia(double*) const;
+		void compute_plastic_modulus(double*) const;
+
+		//plastic center
+		void plastic_center_2(double&, double) const;
+		void plastic_center_3(double&, double) const;
 
 		//jacobian
 		void positions(double*) const;

@@ -57,13 +57,14 @@ namespace sections
 		void compute_center(void);
 		void compute_inertia(void);
 		void compute_warping(void);
+		void compute_properties(void);
 		void compute_plastic_center(void);
 		void compute_elastic_modulus(void);
 		void compute_plastic_modulus(void);
 
 		//warping
-		void adjust_warping(void);
-		void adjust_stiffness(void);
+		void warping_fix(void);
+		void warping_center(void);
 
 		//geometry
 		virtual void setup_geometry(void) const = 0;
@@ -76,9 +77,6 @@ namespace sections
 		bool m_status;
 		double m_mesh_size;
 
-		double* m_u;
-		double* m_f;
-		double* m_K;
 		double m_area;
 		double m_inertia[2];
 		double m_shear_area[3];
@@ -88,7 +86,8 @@ namespace sections
 		double m_plastic_center[2];
 		double m_elastic_modulus[2];
 		double m_plastic_modulus[2];
-
+		
+		double *m_u, *m_f, *m_K;
 		std::vector<Node> m_nodes;
 		std::vector<Element> m_elements;
 
