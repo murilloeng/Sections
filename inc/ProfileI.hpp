@@ -5,14 +5,14 @@
 
 namespace sections
 {
-	class ProfileT : public Profile
+	class ProfileI : public Profile
 	{
 	public:
 		//constructor
-		ProfileT(void);
+		ProfileI(void);
 
 		//destructor
-		~ProfileT(void);
+		~ProfileI(void);
 
 	private:
 		//geometry

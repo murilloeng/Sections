@@ -24,14 +24,14 @@ namespace sections
 		void print(void) const;
 
 	private:
+		//assemble
+		void assemble_force(void) const;
+		void assemble_stiffness(void) const;
+	
 		//warping
 		void warping_center(double*) const;
 		void warping_properties(double*) const;
 
-		//assemble
-		void assemble_force(void) const;
-		void assemble_stiffness(void) const;
-		
 		//compute
 		void compute_area(double&) const;
 		void compute_center(double*) const;

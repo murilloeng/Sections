@@ -4,6 +4,7 @@
 
 //Sections
 #include "Sections/inc/RHS.hpp"
+#include "Sections/inc/ProfileI.hpp"
 #include "Sections/inc/ProfileT.hpp"
 #include "Sections/inc/Rectangle.hpp"
 #include "Sections/Test/inc/Engine.hpp"
