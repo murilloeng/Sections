@@ -65,6 +65,7 @@ namespace sections
 		//warping
 		void warping_fix(void);
 		void warping_center(void);
+		void warping_functions(void);
 
 		//geometry
 		virtual void setup_geometry(void) const = 0;

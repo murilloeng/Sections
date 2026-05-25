@@ -275,22 +275,27 @@ namespace sections
 	}
 	void Section::compute_properties(void)
 	{
+		//data
 		double& c2 = m_shear_center[0];
 		double& c3 = m_shear_center[1];
 		const double I2 = m_inertia[0];
 		const double I3 = m_inertia[1];
+		//compute
 		double H[] = {0, 0, 0, 0, 0, 0};
 		for(const Element& element : m_elements)
 		{
 			element.warping_properties(H);
 		}
+		//properties
 		m_shear_center[0] = H[0] / I2;
 		m_shear_center[1] = H[1] / I3;
+		m_warping_constant = H[5] - c2 * c2 * I2 - c3 * c3 * I3;
 		m_shear_area[0] = +I3 * I3 * H[3] / (H[2] * H[3] - H[4] * H[4]);
 		m_shear_area[1] = +I2 * I2 * H[2] / (H[2] * H[3] - H[4] * H[4]);
 		m_shear_area[2] = -I2 * I3 * H[4] / (H[2] * H[3] - H[4] * H[4]);
-		m_warping_constant = H[5] - c2 * c2 * I2 - c3 * c3 * I3;
 		m_torsion_constant = I2 + I3 - math::vector(m_f, m_nodes.size()).inner(m_u);
+		//functions
+		warping_functions();
 	}
 	void Section::compute_plastic_center(void)
 	{
@@ -370,6 +375,29 @@ namespace sections
 			node.m_warping[0] -= Q[0] / m_area;
 			node.m_warping[1] -= Q[1] / m_area;
 			node.m_warping[2] -= Q[2] / m_area;
+		}
+	}
+	void Section::warping_functions(void)
+	{
+		//data
+		const double I2 = m_inertia[0];
+		const double I3 = m_inertia[1];
+		const double A2 = m_shear_area[0];
+		const double A3 = m_shear_area[1];
+		const double Am = m_shear_area[2];
+		const double c2 = m_shear_center[0];
+		const double c3 = m_shear_center[1];
+		//warping
+		for(Node& node : m_nodes)
+		{
+			const double wt = node.m_warping[0];
+			const double n2 = node.m_warping[1];
+			const double n3 = node.m_warping[2];
+			const double x2 = node.m_position[0];
+			const double x3 = node.m_position[1];
+			node.m_warping[0] = wt + c2 * x3 - c3 * x2;
+			node.m_warping[1] = A2 / I3 * n2 + Am / I2 * n3;
+			node.m_warping[2] = Am / I3 * n2 + A3 / I2 * n3;
 		}
 	}
 
