@@ -36,6 +36,8 @@ namespace sections
 		void setup_geometry_2(void) const;
 		void setup_geometry_3(void) const;
 		void setup_geometry_4(void) const;
+
+		void setup_isolated(void) override;
 		void setup_geometry(void) const override;
 
 		//data

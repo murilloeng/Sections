@@ -136,6 +136,7 @@ namespace sections
 		gmsh::model::add("Section");
 		//geometry
 		setup_geometry();
+		setup_isolated();
 		gmsh::model::geo::synchronize();
 		//mesh
 		gmsh::model::mesh::generate(2);
@@ -355,10 +356,17 @@ namespace sections
 	{
 		//data
 		const uint32_t nn = m_nodes.size();
-		//stiffness
+		//diagonal
+		double Kd = 0;
 		for(uint32_t i = 0; i < nn; i++)
 		{
-			m_K[0] += m_K[i + nn * i];
+			Kd += m_K[i + nn * i];
+		}
+		//stiffness
+		m_K[0] += Kd;
+		for(uint32_t i : m_isolated)
+		{
+			m_K[i + nn * i] += Kd;
 		}
 	}
 	void Section::warping_center(void)
@@ -399,6 +407,12 @@ namespace sections
 			node.m_warping[1] = A2 / I3 * n2 + Am / I2 * n3;
 			node.m_warping[2] = Am / I3 * n2 + A3 / I2 * n3;
 		}
+	}
+
+	//geometry
+	void Section::setup_isolated(void)
+	{
+		return;
 	}
 
 	//plastic center

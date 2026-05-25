@@ -68,6 +68,7 @@ namespace sections
 		void warping_functions(void);
 
 		//geometry
+		virtual void setup_isolated(void);
 		virtual void setup_geometry(void) const = 0;
 
 		//plastic center
@@ -91,6 +92,7 @@ namespace sections
 		double *m_u, *m_f, *m_K;
 		std::vector<Node> m_nodes;
 		std::vector<Element> m_elements;
+		std::vector<uint32_t> m_isolated;
 
 		//friends
 		friend class Element;

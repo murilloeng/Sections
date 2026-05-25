@@ -25,10 +25,11 @@ int main(void)
 	try
 	{
 		//data
-		sections::ProfileT section;
-		section.mesh_size(5.00e-3);
+		sections::RHS section;
+		section.mesh_size(1.30e-03);
+		section.radius_inner(2.60e-03);
+		section.radius_outer(3.90e-03);
 		//compute
-		section.radius(0);
 		section.compute();
 		//print
 		section.print();

@@ -237,6 +237,13 @@ namespace sections
 		//surfaces
 		gmsh::model::geo::addPlaneSurface({2, 1}, 1);
 	}
+
+	void RHS::setup_isolated(void)
+	{
+		if(m_radius_inner == 0 && m_radius_outer != 0) m_isolated = { 8,  9, 10, 11};
+		if(m_radius_inner != 0 && m_radius_outer == 0) m_isolated = {12, 13, 14, 15};
+		if(m_radius_inner != 0 && m_radius_outer != 0) m_isolated = { 8,  9, 10, 11, 20, 21, 22, 23};
+	}
 	void RHS::setup_geometry(void) const
 	{
 		m_radius_inner == 0 ? 

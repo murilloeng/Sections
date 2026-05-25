@@ -86,6 +86,11 @@ namespace sections
 		//surfaces
 		gmsh::model::geo::addPlaneSurface({1}, 1);
 	}
+
+	void ProfileT::setup_isolated(void)
+	{
+		if(m_radius) m_isolated = {3, 10};
+	}
 	void ProfileT::setup_geometry(void) const
 	{
 		m_radius == 0 ? setup_geometry_1() : setup_geometry_2();
