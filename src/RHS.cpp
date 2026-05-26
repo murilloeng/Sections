@@ -235,7 +235,7 @@ namespace sections
 		gmsh::model::geo::addCurveLoop({ 9, 1, 10, 2, 11, 3, 12, 4}, 1);
 		gmsh::model::geo::addCurveLoop({13, 5, 14, 6, 15, 7, 16, 8}, 2);
 		//surfaces
-		gmsh::model::geo::addPlaneSurface({2, 1}, 1);
+		gmsh::model::geo::addPlaneSurface({2, -1}, 1);
 	}
 
 	void RHS::setup_isolated(void)
