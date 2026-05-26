@@ -3,6 +3,7 @@
 #include <cstdlib>
 
 //Sections
+#include "Sections/inc/CHS.hpp"
 #include "Sections/inc/RHS.hpp"
 #include "Sections/inc/ProfileI.hpp"
 #include "Sections/inc/ProfileT.hpp"
@@ -25,10 +26,8 @@ int main(void)
 	try
 	{
 		//data
-		sections::RHS section;
+		sections::CHS section;
 		section.mesh_size(1.30e-03);
-		section.radius_inner(2.60e-03);
-		section.radius_outer(3.90e-03);
 		//compute
 		section.compute();
 		//print
