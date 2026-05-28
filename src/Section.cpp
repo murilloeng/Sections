@@ -11,7 +11,7 @@
 
 //Math
 #include "Math/inc/linear/vector.hpp"
-#include "Math/inc/solvers/bisection.hpp"
+#include "Math/inc/solvers/Bisection.hpp"
 
 namespace sections
 {
@@ -306,7 +306,7 @@ namespace sections
 		double x3_min = +DBL_MAX;
 		double x3_max = -DBL_MAX;
 		const void* args[] = { this };
-		math::bisection solver_2, solver_3;
+		math::solvers::Bisection solver_2, solver_3;
 		//bounds
 		for(const Node& node : m_nodes)
 		{
