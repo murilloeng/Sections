@@ -8,7 +8,7 @@
 #include "Sections/inc/Section.hpp"
 
 //Math
-#include "Math/inc/linear/matrix.hpp"
+#include "Math/inc/Linear/Matrix.hpp"
 
 //static
 static const double A[] = {
@@ -267,7 +267,7 @@ namespace sections
 	double Element::jacobian(const double* p) const
 	{
 		//data
-		math::matrix B(6, 2), P(2, 6);
+		math::Matrix B(6, 2), P(2, 6);
 		//jacobian
 		positions(P.data());
 		gradient(B.data(), p);
@@ -276,13 +276,13 @@ namespace sections
 	double Element::jacobian(double* J, const double* p) const
 	{
 		 //data
-		math::matrix B(6, 2), P(2, 6);
+		math::Matrix B(6, 2), P(2, 6);
 		//jacobian
 		positions(P.data());
 		gradient(B.data(), p);
-		math::matrix(J, 2, 2) = P * B;
+		math::Matrix(J, 2, 2) = P * B;
 		//return
-		return math::matrix(J, 2, 2).determinant();
+		return math::Matrix(J, 2, 2).determinant();
 	}
 
 	//interpolation

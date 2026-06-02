@@ -10,8 +10,8 @@
 #include "Sections/inc/Section.hpp"
 
 //Math
-#include "Math/inc/linear/vector.hpp"
-#include "Math/inc/solvers/Bisection.hpp"
+#include "Math/inc/Linear/Vector.hpp"
+#include "Math/inc/Solvers/Bisection.hpp"
 
 namespace sections
 {
@@ -258,9 +258,9 @@ namespace sections
 		}
 		//solve
 		warping_fix();
-		math::matrix u(m_u, nn, 3);
-		math::matrix f(m_f, nn, 3);
-		if(!math::matrix(m_K, nn, nn).solve(u, f))
+		math::Matrix u(m_u, nn, 3);
+		math::Matrix f(m_f, nn, 3);
+		if(!math::Matrix(m_K, nn, nn).solve(u, f))
 		{
 			throw std::runtime_error("Error: Unable to solve warping problem!");
 		}
@@ -294,7 +294,7 @@ namespace sections
 		m_shear_area[0] = +I3 * I3 * H[3] / (H[2] * H[3] - H[4] * H[4]);
 		m_shear_area[1] = +I2 * I2 * H[2] / (H[2] * H[3] - H[4] * H[4]);
 		m_shear_area[2] = -I2 * I3 * H[4] / (H[2] * H[3] - H[4] * H[4]);
-		m_torsion_constant = I2 + I3 - math::vector(m_f, m_nodes.size()).inner(m_u);
+		m_torsion_constant = I2 + I3 - math::Vector(m_f, m_nodes.size()).inner(m_u);
 		//functions
 		warping_functions();
 	}
