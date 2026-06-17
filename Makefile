@@ -46,11 +46,11 @@ lib : math $(out_lib)
 exe : lib canvas $(out_exe)
 	@echo 'executable build - $(mode): complete!'
 
-math : 
-	@cd ../Math && make -f Makefile m=$m lib
+math :
+	+@cd ../Math && $(MAKE) -f Makefile lib m=$m 
 
 canvas : 
-	@cd ../Canvas && make -f Makefile m=$m lib
+	+@cd ../Canvas && $(MAKE) -f Makefile lib m=$m
 
 $(out_lib) : $(obj_lib)
 	@mkdir -p $(dir $@)
