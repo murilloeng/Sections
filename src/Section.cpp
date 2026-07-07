@@ -132,6 +132,7 @@ namespace sections
 	{
 		//initialize
 		gmsh::initialize();
+		gmsh::option::setNumber("General.Verbosity", 0);
 		//model
 		gmsh::model::add("Section");
 		//geometry
