@@ -60,7 +60,11 @@ namespace sections
 	{
 		return m_warping_constant;
 	}
-	
+
+	double Section::plastic_center(uint32_t index) const
+	{
+		return m_plastic_center[index];
+	}
 	double Section::elastic_modulus(uint32_t index) const
 	{
 		return m_elastic_modulus[index];

@@ -29,7 +29,7 @@ namespace sections
 	{
 		return;
 	}
-	
+
 	//destructor
 	Element::~Element(void)
 	{

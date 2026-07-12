@@ -9,7 +9,7 @@ namespace sections
 	{
 		return;
 	}
-	
+
 	//destructor
 	Profile::~Profile(void)
 	{

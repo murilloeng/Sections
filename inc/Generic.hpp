@@ -20,13 +20,14 @@ namespace sections
 		//data
 		double area(double);
 		double inertia(uint32_t, double);
-		
+
 		double shear_area(uint32_t, double);
 		double shear_center(uint32_t, double);
-		
+
 		double torsion_constant(double);
 		double warping_constant(double);
-		
+
+		double plastic_center(uint32_t, double);
 		double elastic_modulus(uint32_t, double);
 		double plastic_modulus(uint32_t, double);
 

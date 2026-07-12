@@ -29,7 +29,7 @@ namespace sections
 
 		//print
 		void print(void) const;
-	
+
 	private:
 		//data
 		double m_warping[3];

@@ -21,7 +21,7 @@ public:
 
 	sections::Section* section(void);
 	sections::Section* section(sections::Section*);
-	
+
 private:
 	//draw
 	void draw(void) override;

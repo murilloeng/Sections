@@ -27,7 +27,7 @@ namespace sections
 		//assemble
 		void assemble_force(void) const;
 		void assemble_stiffness(void) const;
-	
+
 		//warping
 		void warping_center(double*) const;
 		void warping_properties(double*) const;

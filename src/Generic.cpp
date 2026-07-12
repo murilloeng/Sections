@@ -50,7 +50,11 @@ namespace sections
 	{
 		return m_warping_constant = warping_constant;
 	}
-	
+
+	double Generic::plastic_center(uint32_t index, double plastic_center)
+	{
+		return m_plastic_center[index] = plastic_center;
+	}
 	double Generic::elastic_modulus(uint32_t index, double elastic_modulus)
 	{
 		return m_elastic_modulus[index] = elastic_modulus;

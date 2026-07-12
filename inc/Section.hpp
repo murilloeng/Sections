@@ -21,13 +21,14 @@ namespace sections
 		//data
 		double area(void) const;
 		double inertia(uint32_t) const;
-		
+
 		double shear_area(uint32_t) const;
 		double shear_center(uint32_t) const;
-		
+
 		double torsion_constant(void) const;
 		double warping_constant(void) const;
-		
+
+		double plastic_center(uint32_t) const;
 		double elastic_modulus(uint32_t) const;
 		double plastic_modulus(uint32_t) const;
 
@@ -38,7 +39,7 @@ namespace sections
 
 		const std::vector<Node>& nodes(void) const;
 		const std::vector<Element>& elements(void) const;
-		
+
 		//compute
 		void compute(void);
 
@@ -88,7 +89,7 @@ namespace sections
 		double m_plastic_center[2];
 		double m_elastic_modulus[2];
 		double m_plastic_modulus[2];
-		
+
 		double *m_u, *m_f, *m_K;
 		std::vector<Node> m_nodes;
 		std::vector<Element> m_elements;

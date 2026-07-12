@@ -11,7 +11,7 @@ namespace sections
 	{
 		return;
 	}
-	
+
 	//destructor
 	Rectangle::~Rectangle(void)
 	{
