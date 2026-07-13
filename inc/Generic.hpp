@@ -31,6 +31,12 @@ namespace sections
 		double elastic_modulus(uint32_t, double);
 		double plastic_modulus(uint32_t, double);
 
+		using Section::area, Section::inertia;
+		using Section::shear_area, Section::shear_center;
+		using Section::torsion_constant, Section::warping_constant;
+		using Section::plastic_center, Section::elastic_modulus, Section::plastic_modulus;
+
+	private:
 		//compute
 		void compute(void);
 	};

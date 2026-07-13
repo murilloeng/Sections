@@ -419,6 +419,10 @@ namespace sections
 	{
 		return;
 	}
+	void Section::setup_geometry(void) const
+	{
+		return;
+	}
 
 	//plastic center
 	double Section::plastic_center_function_2(double x2, const void** args)
