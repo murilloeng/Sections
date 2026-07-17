@@ -2,7 +2,7 @@
 CXX = g++
 WARS = -Wall -Werror
 INCS = -I .. -I /usr/include/freetype2
-LIBS = -l gmsh -l GL -l glfw -l umfpack -l fftw3 -l quadrule
+LIBS = -l umfpack -l arpack -l fftw3 -l quadrule -l gmsh -l GL -l glfw
 CXXFLAGS = -std=c++20 -fPIC -pipe -fopenmp -MT $@ -MMD -MP -MF $(subst .o,.d, $@) $(DEFS) $(INCS) $(WARS)
 
 #mode
