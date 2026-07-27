@@ -21,6 +21,7 @@ out_exe = Test/dist/$(mode)/sections.out
 #libraries
 lib_math = ../Math/dist/$(mode)/libmath.so
 lib_canvas = ../Canvas/dist/$(mode)/libcanvas.so
+lib_materials = ../Materials/dist/$(mode)/libmaterials.so
 
 #sources
 src_lib := $(sort $(shell find -path './src/*.cpp'))
@@ -40,7 +41,7 @@ all : exe
 run : exe
 	./$(out_exe)
 
-lib : math $(out_lib)
+lib : math materials $(out_lib)
 	@echo 'library build - $(mode): complete!'
 
 exe : lib canvas $(out_exe)
@@ -52,6 +53,9 @@ math :
 canvas : 
 	+@cd ../Canvas && $(MAKE) -f Makefile lib m=$m
 
+materials : 
+	+@cd ../Materials && $(MAKE) -f Makefile lib m=$m
+
 $(out_lib) : $(obj_lib)
 	@mkdir -p $(dir $@)
 	@g++ -shared -o $(out_lib) $(obj_lib)
@@ -59,7 +63,7 @@ $(out_lib) : $(obj_lib)
 
 $(out_exe) : $(obj_exe)
 	@mkdir -p $(dir $@)
-	@g++ -o $(out_exe) $(obj_exe) $(out_lib) $(lib_math) $(lib_canvas) $(LIBS)
+	@g++ -o $(out_exe) $(obj_exe) $(out_lib) $(lib_math) $(lib_materials) $(lib_canvas) $(LIBS)
 	@echo 'executable - $(mode): $@'
 
 build/$(mode)/%.o : src/%.cpp build/$(mode)/%.d
