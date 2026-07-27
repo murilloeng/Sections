@@ -4,8 +4,8 @@
 #include <vector>
 
 //Sections
-#include "Sections/inc/Node.hpp"
-#include "Sections/inc/Element.hpp"
+#include "Sections/inc/Mesh/Node.hpp"
+#include "Sections/inc/Mesh/Element.hpp"
 
 namespace sections
 {

@@ -3,9 +3,9 @@
 #include <cstdio>
 
 //Sections
-#include "Sections/inc/Node.hpp"
-#include "Sections/inc/Element.hpp"
 #include "Sections/inc/Section.hpp"
+#include "Sections/inc/Mesh/Node.hpp"
+#include "Sections/inc/Mesh/Element.hpp"
 
 //Math
 #include "Math/inc/Linear/Matrix.hpp"

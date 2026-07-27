@@ -2,7 +2,7 @@
 #include <cstdio>
 
 //Sections
-#include "Sections/inc/Node.hpp"
+#include "Sections/inc/Mesh/Node.hpp"
 
 namespace sections
 {
