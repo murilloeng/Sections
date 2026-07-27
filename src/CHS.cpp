@@ -3,11 +3,12 @@
 
 //Sections
 #include "Sections/inc/CHS.hpp"
+#include "Sections/inc/Fibers/Arc.hpp"
 
 namespace sections
 {
 	//constructor
-	CHS::CHS(void) : m_diameter{2.13e-02}, m_thickness{2.30e-03}
+	CHS::CHS(void) : m_diameter{2.13e-02}, m_thickness{2.30e-03}, m_fibers_angle{10}, m_fibers_radius{5}
 	{
 		return;
 	}
@@ -37,7 +38,45 @@ namespace sections
 		return m_thickness = thickness;
 	}
 
+	uint32_t CHS::fibers_angle(void) const
+	{
+		return m_fibers_angle;
+	}
+	uint32_t CHS::fibers_angle(uint32_t fibers_angle)
+	{
+		return m_fibers_angle = fibers_angle;
+	}
+
+	uint32_t CHS::fibers_radius(void) const
+	{
+		return m_fibers_radius;
+	}
+	uint32_t CHS::fibers_radius(uint32_t fibers_radius)
+	{
+		return m_fibers_radius = fibers_radius;
+	}
+
 	//geometry
+	void CHS::setup_fibers(void)
+	{
+		//data
+		const uint32_t na = m_fibers_angle;
+		const uint32_t nr = m_fibers_radius;
+		//fibers
+		const double t = m_thickness;
+		const double a = 2 * M_PI / na;
+		const double r = m_diameter / 2;
+		for(uint32_t i = 0; i < na; i++)
+		{
+			for(uint32_t j = 0; j < nr; j++)
+			{
+				const double q = 2 * M_PI * i / na;
+				const double r1 = r - t + t * (j + 0) / nr;
+				const double r2 = r - t + t * (j + 1) / nr;
+				m_fibers.push_back(new fibers::Arc(a, q, r1, r2));
+			}
+		}
+	}
 	void CHS::setup_isolated(void)
 	{
 		m_isolated = { 0 };

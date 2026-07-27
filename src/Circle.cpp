@@ -61,8 +61,8 @@ namespace sections
 			for(uint32_t j = 0; j < nr; j++)
 			{
 				const double q = 2 * M_PI * i / na;
-				const double r1 = r * (j + 0) / m_fibers_radius;
-				const double r2 = r * (j + 1) / m_fibers_radius;
+				const double r1 = r * (j + 0) / nr;
+				const double r2 = r * (j + 1) / nr;
 				m_fibers.push_back(new fibers::Arc(a, q, r1, r2));
 			}
 		}
