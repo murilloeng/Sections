@@ -7,7 +7,7 @@
 namespace sections
 {
 	//constructor
-	Rectangle::Rectangle(void) : m_width{2.00e-01}, m_height{6.00e-01}
+	Rectangle::Rectangle(void) : m_width{2.00e-01}, m_height{6.00e-01}, m_fibers_width{10}, m_fibers_height{10}
 	{
 		return;
 	}
@@ -37,7 +37,29 @@ namespace sections
 		return m_height = height;
 	}
 
+	uint32_t Rectangle::fibers_width(void) const
+	{
+		return m_fibers_width;
+	}
+	uint32_t Rectangle::fibers_width(uint32_t fibers_width)
+	{
+		return m_fibers_width = fibers_width;
+	}
+
+	uint32_t Rectangle::fibers_height(void) const
+	{
+		return m_fibers_height;
+	}
+	uint32_t Rectangle::fibers_height(uint32_t fibers_height)
+	{
+		return m_fibers_height = fibers_height;
+	}
+
 	//geometry
+	void Rectangle::setup_fibers(void)
+	{
+		fibers::Fiber::create_rectangles(m_fibers, -m_width / 2, -m_height / 2, m_width, m_height, m_fibers_width, m_fibers_height);
+	}
 	void Rectangle::setup_geometry(void) const
 	{
 		//data

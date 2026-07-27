@@ -16,8 +16,14 @@ public:
 	//destructor
 	~Draw(void);
 
+	//enums
+	enum class Type : uint32_t { Mesh, Fibers, Last };
+
 	//data
 	What& what(void);
+
+	Type type(Type);
+	Type type(void) const;
 
 	sections::Section* section(void);
 	sections::Section* section(sections::Section*);
@@ -30,13 +36,16 @@ private:
 
 	//setup
 	void setup_nodes(void);
+	void setup_fibers(void);
 	void setup_elements(void);
 
 	//update
 	void update_nodes(void);
+	void update_fibers(void);
 	void update_elements(void);
 
 	//data
+	Type m_type;
 	What m_what;
 	sections::Section* m_section;
 

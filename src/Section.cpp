@@ -39,6 +39,7 @@ namespace sections
 		delete[] m_cols_map;
 		delete[] m_rows_triplet;
 		delete[] m_cols_triplet;
+		for(const fibers::Fiber* fiber : m_fibers) delete fiber;
 	}
 
 	//data
@@ -104,6 +105,10 @@ namespace sections
 	{
 		return m_elements;
 	}
+	const std::vector<fibers::Fiber*>& Section::fibers(void) const
+	{
+		return m_fibers;
+	}
 
 	//analysis
 	void Section::compute(void)
@@ -148,6 +153,7 @@ namespace sections
 		//model
 		gmsh::model::add("Section");
 		//geometry
+		setup_fibers();
 		setup_geometry();
 		setup_isolated();
 		gmsh::model::geo::synchronize();
@@ -449,6 +455,10 @@ namespace sections
 	}
 
 	//geometry
+	void Section::setup_fibers(void)
+	{
+		return;
+	}
 	void Section::setup_isolated(void)
 	{
 		return;

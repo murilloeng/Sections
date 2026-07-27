@@ -6,6 +6,7 @@
 //Sections
 #include "Sections/inc/Mesh/Node.hpp"
 #include "Sections/inc/Mesh/Element.hpp"
+#include "Sections/inc/Fibers/Fiber.hpp"
 
 namespace sections
 {
@@ -39,6 +40,7 @@ namespace sections
 
 		const std::vector<Node>& nodes(void) const;
 		const std::vector<Element>& elements(void) const;
+		const std::vector<fibers::Fiber*>& fibers(void) const;
 
 		//compute
 		void compute(void);
@@ -52,7 +54,7 @@ namespace sections
 		void setup_nodes(void);
 		void setup_warping(void);
 		void setup_elements(void);
-
+		
 		//compute
 		void compute_area(void);
 		void compute_center(void);
@@ -62,13 +64,14 @@ namespace sections
 		void compute_plastic_center(void);
 		void compute_elastic_modulus(void);
 		void compute_plastic_modulus(void);
-
+		
 		//warping
 		void warping_fix(void);
 		void warping_center(void);
 		void warping_functions(void);
-
+		
 		//geometry
+		virtual void setup_fibers(void);
 		virtual void setup_isolated(void);
 		virtual void setup_geometry(void) const;
 
@@ -98,6 +101,7 @@ namespace sections
 		std::vector<Node> m_nodes;
 		std::vector<Element> m_elements;
 		std::vector<uint32_t> m_isolated;
+		std::vector<fibers::Fiber*> m_fibers;
 
 		//friends
 		friend class Element;

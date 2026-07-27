@@ -1,6 +1,7 @@
 //Sections
 #include "Sections/inc/Section.hpp"
 #include "Sections/Test/inc/Draw.hpp"
+#include "Sections/inc/Fibers/Rectangle.hpp"
 
 //Canvas
 #include "Canvas/inc/Scene/Scene.hpp"
@@ -8,7 +9,7 @@
 #include "Canvas/inc/Objects/Tessellator.hpp"
 
 //constructor
-Draw::Draw(void)
+Draw::Draw(void) : m_type{Type::Fibers}
 {
 	return;
 }
@@ -23,6 +24,15 @@ Draw::~Draw(void)
 What& Draw::what(void)
 {
 	return m_what;
+}
+
+Draw::Type Draw::type(Type type)
+{
+	return m_type = type;
+}
+Draw::Type Draw::type(void) const
+{
+	return m_type;
 }
 
 sections::Section* Draw::section(void)
@@ -55,8 +65,15 @@ void Draw::setup(void)
 	m_counter_vertices = 0;
 	m_counter_triangles = 0;
 	//setup
-	if(m_what.nodes()) setup_nodes();
-	if(m_what.elements()) setup_elements();
+	if(m_type == Type::Mesh)
+	{
+		if(m_what.nodes()) setup_nodes();
+		if(m_what.elements()) setup_elements();
+	}
+	else if(m_type == Type::Fibers)
+	{
+		if(m_what.fibers()) setup_fibers();
+	}
 	//allocate
 	m_vbo.allocate(m_counter_vertices);
 	m_ibo.allocate(m_counter_points + m_counter_lines + m_counter_triangles);
@@ -69,8 +86,15 @@ void Draw::update(void)
 	m_index_vertices = 0;
 	m_index_triangles = 0;
 	//update
-	if(m_what.nodes()) update_nodes();
-	if(m_what.elements()) update_elements();
+	if(m_type == Type::Mesh)
+	{
+		if(m_what.nodes()) update_nodes();
+		if(m_what.elements()) update_elements();
+	}
+	else if(m_type == Type::Fibers)
+	{
+		if(m_what.fibers()) update_fibers();
+	}
 	//transfer
 	m_vbo.transfer();
 	m_ibo.transfer();
@@ -84,6 +108,18 @@ void Draw::setup_nodes(void)
 	//setup
 	m_counter_points += nn;
 	m_counter_vertices += nn;
+}
+void Draw::setup_fibers(void)
+{
+	for(const sections::fibers::Fiber* fiber : m_section->fibers())
+	{
+		if(dynamic_cast<const sections::fibers::Rectangle*>(fiber))
+		{
+			m_counter_lines += 8;
+			m_counter_vertices += 8;
+			m_counter_triangles += 6;
+		}
+	}
 }
 void Draw::setup_elements(void)
 {
@@ -116,6 +152,52 @@ void Draw::update_nodes(void)
 	//update
 	m_index_points += nn;
 	m_index_vertices += nn;
+}
+void Draw::update_fibers(void)
+{
+	//data
+	uint32_t* ibo_ptr_lines = m_ibo.data() + m_counter_points + m_index_lines;
+	uint32_t* ibo_ptr_triangles = m_ibo.data() + m_counter_points + m_counter_lines + m_index_triangles;
+	canvas::vertices::Model3D* vbo_ptr = (canvas::vertices::Model3D*) m_vbo.data() + m_index_vertices;
+	//buffers data
+	for(const sections::fibers::Fiber* fiber : m_section->fibers())
+	{
+		const double x2 = fiber->position(0);
+		const double x3 = fiber->position(1);
+		if(dynamic_cast<const sections::fibers::Rectangle*>(fiber))
+		{
+			//fiber
+			sections::fibers::Rectangle* rectangle = (sections::fibers::Rectangle*) fiber;
+			//vbo data
+			const double s2 = rectangle->width();
+			const double s3 = rectangle->height();
+			for(uint32_t i = 0; i < 8; i++) vbo_ptr[i].m_position[2] = 0;
+			for(uint32_t i = 0; i < 4; i++) vbo_ptr[i + 4].m_color = "blue";
+			for(uint32_t i = 0; i < 4; i++) vbo_ptr[i + 0].m_color = "white";
+			vbo_ptr[0].m_position[0] = vbo_ptr[3].m_position[0] = vbo_ptr[4].m_position[0] = vbo_ptr[7].m_position[0] = x2 - s2 / 2;
+			vbo_ptr[1].m_position[0] = vbo_ptr[2].m_position[0] = vbo_ptr[5].m_position[0] = vbo_ptr[6].m_position[0] = x2 + s2 / 2;
+			vbo_ptr[0].m_position[1] = vbo_ptr[1].m_position[1] = vbo_ptr[4].m_position[1] = vbo_ptr[5].m_position[1] = x3 - s3 / 2;
+			vbo_ptr[2].m_position[1] = vbo_ptr[3].m_position[1] = vbo_ptr[6].m_position[1] = vbo_ptr[7].m_position[1] = x3 + s3 / 2;
+			//ibo data
+			ibo_ptr_triangles[3 * 0 + 0] = m_index_vertices + 4;
+			ibo_ptr_triangles[3 * 0 + 1] = m_index_vertices + 5;
+			ibo_ptr_triangles[3 * 0 + 2] = m_index_vertices + 6;
+			ibo_ptr_triangles[3 * 1 + 0] = m_index_vertices + 4;
+			ibo_ptr_triangles[3 * 1 + 1] = m_index_vertices + 6;
+			ibo_ptr_triangles[3 * 1 + 2] = m_index_vertices + 7;
+			ibo_ptr_lines[2 * 0 + 0] = ibo_ptr_lines[2 * 3 + 1] = m_index_vertices + 0;
+			ibo_ptr_lines[2 * 1 + 0] = ibo_ptr_lines[2 * 0 + 1] = m_index_vertices + 1;
+			ibo_ptr_lines[2 * 2 + 0] = ibo_ptr_lines[2 * 1 + 1] = m_index_vertices + 2;
+			ibo_ptr_lines[2 * 3 + 0] = ibo_ptr_lines[2 * 2 + 1] = m_index_vertices + 3;
+			//update
+			vbo_ptr += 8;
+			ibo_ptr_lines += 8;
+			m_index_lines += 8;
+			m_index_vertices += 8;
+			ibo_ptr_triangles += 6;
+			m_index_triangles += 6;
+		}
+	}
 }
 void Draw::update_elements(void)
 {

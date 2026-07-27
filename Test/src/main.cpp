@@ -26,8 +26,9 @@ int main(void)
 	try
 	{
 		//data
-		sections::CHS section;
-		section.mesh_size(1.30e-03);
+		sections::Rectangle section;
+		// section.mesh_size(1.30e-03);
+		section.fibers_height(30);
 		//compute
 		section.compute();
 		//print

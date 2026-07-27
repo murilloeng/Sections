@@ -92,13 +92,10 @@ namespace sections
 	void Element::assemble_stiffness(void) const
 	{
 		//data
-		double* K = m_section->m_K;
 		double d, w, p[2], J[4], Bn[12], Bs[12];
-		const int32_t* r = m_section->m_rows_map;
-		const int32_t* c = m_section->m_cols_map;
 		const uint32_t nn = m_section->m_nodes.size();
+		math::Sparse Ks(m_section->m_K, m_section->m_rows_map, m_section->m_cols_map, nn, nn);
 		//assemble
-		math::Sparse Ks(K, r, c, nn, nn);
 		for(uint32_t k = 0; k < 4; k++)
 		{
 			//point
@@ -120,8 +117,6 @@ namespace sections
 					const uint32_t dj = m_nodes[j];
 					Ks(di, dj) += w * d * Bs[i + 0] * Bs[j + 0];
 					Ks(di, dj) += w * d * Bs[i + 6] * Bs[j + 6];
-					// K[di + nn * dj] += w * d * Bs[i + 0] * Bs[j + 0];
-					// K[di + nn * dj] += w * d * Bs[i + 6] * Bs[j + 6];
 				}
 			}
 		}

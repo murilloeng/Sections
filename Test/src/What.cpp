@@ -2,7 +2,7 @@
 #include "Sections/Test/inc/What.hpp"
 
 //constructor
-What::What(void) : m_nodes{true}, m_elements{true}
+What::What(void) : m_nodes{true}, m_fibers{true}, m_elements{true}
 {
 	return;
 }
@@ -21,6 +21,15 @@ bool What::nodes(void) const
 bool What::nodes(bool nodes)
 {
 	return m_nodes = nodes;
+}
+
+bool What::fibers(void) const
+{
+	return m_fibers;
+}
+bool What::fibers(bool fibers)
+{
+	return m_fibers = fibers;
 }
 
 bool What::elements(void) const

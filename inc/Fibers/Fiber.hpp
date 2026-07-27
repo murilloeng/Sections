@@ -1,7 +1,13 @@
 #pragma once
 
 //std
+#include <vector>
 #include <cstdint>
+
+namespace sections
+{
+	class Section;
+}
 
 namespace sections
 {
@@ -28,7 +34,13 @@ namespace sections
 			const double* gradient(void) const;
 			double gradient(uint32_t, uint32_t) const;
 
+			//create
+			static void create_rectangles(std::vector<Fiber*>&, double, double, double, double, uint32_t, uint32_t);
+
 		protected:
+			//analysis
+			void setup(Section*);
+
 			//data
 			double m_area;
 			double m_warping[3];
