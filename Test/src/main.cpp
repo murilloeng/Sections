@@ -5,6 +5,7 @@
 //Sections
 #include "Sections/inc/CHS.hpp"
 #include "Sections/inc/RHS.hpp"
+#include "Sections/inc/Circle.hpp"
 #include "Sections/inc/ProfileI.hpp"
 #include "Sections/inc/ProfileT.hpp"
 #include "Sections/inc/Rectangle.hpp"
@@ -26,9 +27,8 @@ int main(void)
 	try
 	{
 		//data
-		sections::Rectangle section;
-		// section.mesh_size(1.30e-03);
-		section.fibers_height(30);
+		sections::Circle section;
+		section.fibers_angle(20);
 		//compute
 		section.compute();
 		//print

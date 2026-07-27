@@ -3,6 +3,8 @@
 //Sections
 #include "Sections/inc/Section.hpp"
 #include "Sections/Test/inc/What.hpp"
+#include "Sections/inc/Fibers/Arc.hpp"
+#include "Sections/inc/Fibers/Rectangle.hpp"
 
 //Canvas
 #include "Canvas/inc/Objects/Bases/BaseModel3D.hpp"
@@ -38,11 +40,15 @@ private:
 	void setup_nodes(void);
 	void setup_fibers(void);
 	void setup_elements(void);
+	void setup_fiber_arc(void);
+	void setup_fiber_rectangle(void);
 
 	//update
 	void update_nodes(void);
 	void update_fibers(void);
 	void update_elements(void);
+	void update_fiber_arc(const sections::fibers::Arc*);
+	void update_fiber_rectangle(const sections::fibers::Rectangle*);
 
 	//data
 	Type m_type;

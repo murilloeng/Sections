@@ -1,12 +1,19 @@
+//std
+#include <cmath>
+
 //Sections
 #include "Sections/inc/Section.hpp"
 #include "Sections/Test/inc/Draw.hpp"
+#include "Sections/inc/Fibers/Arc.hpp"
 #include "Sections/inc/Fibers/Rectangle.hpp"
 
 //Canvas
 #include "Canvas/inc/Scene/Scene.hpp"
 #include "Canvas/inc/Vertices/Model3D.hpp"
 #include "Canvas/inc/Objects/Tessellator.hpp"
+
+//data
+static const uint32_t mesh_curved = 10;
 
 //constructor
 Draw::Draw(void) : m_type{Type::Fibers}
@@ -113,12 +120,8 @@ void Draw::setup_fibers(void)
 {
 	for(const sections::fibers::Fiber* fiber : m_section->fibers())
 	{
-		if(dynamic_cast<const sections::fibers::Rectangle*>(fiber))
-		{
-			m_counter_lines += 8;
-			m_counter_vertices += 8;
-			m_counter_triangles += 6;
-		}
+		if(dynamic_cast<const sections::fibers::Arc*>(fiber)) setup_fiber_arc();
+		if(dynamic_cast<const sections::fibers::Rectangle*>(fiber)) setup_fiber_rectangle();
 	}
 }
 void Draw::setup_elements(void)
@@ -130,6 +133,18 @@ void Draw::setup_elements(void)
 	m_counter_lines += 12 * ne;
 	m_counter_vertices += 2 * nn;
 	m_counter_triangles += 12 * ne;
+}
+void Draw::setup_fiber_arc(void)
+{
+	m_counter_lines += 4 * (mesh_curved + 1);
+	m_counter_vertices += 4 * (mesh_curved + 1);
+	m_counter_triangles += 6 * (mesh_curved + 0);
+}
+void Draw::setup_fiber_rectangle(void)
+{
+	m_counter_lines += 8;
+	m_counter_vertices += 8;
+	m_counter_triangles += 6;
 }
 
 //update
@@ -155,48 +170,14 @@ void Draw::update_nodes(void)
 }
 void Draw::update_fibers(void)
 {
-	//data
-	uint32_t* ibo_ptr_lines = m_ibo.data() + m_counter_points + m_index_lines;
-	uint32_t* ibo_ptr_triangles = m_ibo.data() + m_counter_points + m_counter_lines + m_index_triangles;
-	canvas::vertices::Model3D* vbo_ptr = (canvas::vertices::Model3D*) m_vbo.data() + m_index_vertices;
-	//buffers data
 	for(const sections::fibers::Fiber* fiber : m_section->fibers())
 	{
-		const double x2 = fiber->position(0);
-		const double x3 = fiber->position(1);
-		if(dynamic_cast<const sections::fibers::Rectangle*>(fiber))
-		{
-			//fiber
-			sections::fibers::Rectangle* rectangle = (sections::fibers::Rectangle*) fiber;
-			//vbo data
-			const double s2 = rectangle->width();
-			const double s3 = rectangle->height();
-			for(uint32_t i = 0; i < 8; i++) vbo_ptr[i].m_position[2] = 0;
-			for(uint32_t i = 0; i < 4; i++) vbo_ptr[i + 4].m_color = "blue";
-			for(uint32_t i = 0; i < 4; i++) vbo_ptr[i + 0].m_color = "white";
-			vbo_ptr[0].m_position[0] = vbo_ptr[3].m_position[0] = vbo_ptr[4].m_position[0] = vbo_ptr[7].m_position[0] = x2 - s2 / 2;
-			vbo_ptr[1].m_position[0] = vbo_ptr[2].m_position[0] = vbo_ptr[5].m_position[0] = vbo_ptr[6].m_position[0] = x2 + s2 / 2;
-			vbo_ptr[0].m_position[1] = vbo_ptr[1].m_position[1] = vbo_ptr[4].m_position[1] = vbo_ptr[5].m_position[1] = x3 - s3 / 2;
-			vbo_ptr[2].m_position[1] = vbo_ptr[3].m_position[1] = vbo_ptr[6].m_position[1] = vbo_ptr[7].m_position[1] = x3 + s3 / 2;
-			//ibo data
-			ibo_ptr_triangles[3 * 0 + 0] = m_index_vertices + 4;
-			ibo_ptr_triangles[3 * 0 + 1] = m_index_vertices + 5;
-			ibo_ptr_triangles[3 * 0 + 2] = m_index_vertices + 6;
-			ibo_ptr_triangles[3 * 1 + 0] = m_index_vertices + 4;
-			ibo_ptr_triangles[3 * 1 + 1] = m_index_vertices + 6;
-			ibo_ptr_triangles[3 * 1 + 2] = m_index_vertices + 7;
-			ibo_ptr_lines[2 * 0 + 0] = ibo_ptr_lines[2 * 3 + 1] = m_index_vertices + 0;
-			ibo_ptr_lines[2 * 1 + 0] = ibo_ptr_lines[2 * 0 + 1] = m_index_vertices + 1;
-			ibo_ptr_lines[2 * 2 + 0] = ibo_ptr_lines[2 * 1 + 1] = m_index_vertices + 2;
-			ibo_ptr_lines[2 * 3 + 0] = ibo_ptr_lines[2 * 2 + 1] = m_index_vertices + 3;
-			//update
-			vbo_ptr += 8;
-			ibo_ptr_lines += 8;
-			m_index_lines += 8;
-			m_index_vertices += 8;
-			ibo_ptr_triangles += 6;
-			m_index_triangles += 6;
-		}
+		//cast
+		const sections::fibers::Arc* arc = dynamic_cast<const sections::fibers::Arc*>(fiber);
+		const sections::fibers::Rectangle* rectangle = dynamic_cast<const sections::fibers::Rectangle*>(fiber);
+		//update
+		if(arc) update_fiber_arc(arc);
+		if(rectangle) update_fiber_rectangle(rectangle);
 	}
 }
 void Draw::update_elements(void)
@@ -247,4 +228,85 @@ void Draw::update_elements(void)
 	m_index_lines += 12 * ne;
 	m_index_vertices += 2 * nn;
 	m_index_triangles += 12 * ne;
+}
+void Draw::update_fiber_arc(const sections::fibers::Arc* fiber)
+{
+	//data
+	const double a = fiber->angle();
+	const double q = fiber->start();
+	const double r1 = fiber->radius(0);
+	const double r2 = fiber->radius(1);
+	uint32_t* ibo_ptr_lines = m_ibo.data() + m_counter_points + m_index_lines;
+	uint32_t* ibo_ptr_triangles = m_ibo.data() + m_counter_points + m_counter_lines + m_index_triangles;
+	canvas::vertices::Model3D* vbo_ptr = (canvas::vertices::Model3D*) m_vbo.data() + m_index_vertices;
+	//vbo data
+	for(uint32_t i = 0; i <= mesh_curved; i++)
+	{
+		vbo_ptr[2 * (mesh_curved + 1) + i].m_color = "blue";
+		vbo_ptr[3 * (mesh_curved + 1) + i].m_color = "blue";
+		vbo_ptr[0 * (mesh_curved + 1) + i].m_color = "white";
+		vbo_ptr[1 * (mesh_curved + 1) + i].m_color = "white";
+		vbo_ptr[0 * (mesh_curved + 1) + i].m_position[2] = vbo_ptr[2 * (mesh_curved + 1) + i].m_position[2] = 0;
+		vbo_ptr[1 * (mesh_curved + 1) + i].m_position[2] = vbo_ptr[3 * (mesh_curved + 1) + i].m_position[2] = 0;
+		vbo_ptr[0 * (mesh_curved + 1) + i].m_position[0] = vbo_ptr[2 * (mesh_curved + 1) + i].m_position[0] = r1 * cos(q + a * i / mesh_curved);
+		vbo_ptr[0 * (mesh_curved + 1) + i].m_position[1] = vbo_ptr[2 * (mesh_curved + 1) + i].m_position[1] = r1 * sin(q + a * i / mesh_curved);
+		vbo_ptr[1 * (mesh_curved + 1) + i].m_position[0] = vbo_ptr[3 * (mesh_curved + 1) + i].m_position[0] = r2 * cos(q + a * i / mesh_curved);
+		vbo_ptr[1 * (mesh_curved + 1) + i].m_position[1] = vbo_ptr[3 * (mesh_curved + 1) + i].m_position[1] = r2 * sin(q + a * i / mesh_curved);
+	}
+	//ibo data
+	for(uint32_t i = 0; i < mesh_curved; i++)
+	{
+		ibo_ptr_lines[4 * i + 0] = m_index_vertices + 0 * (mesh_curved + 1) + i + 0;
+		ibo_ptr_lines[4 * i + 1] = m_index_vertices + 0 * (mesh_curved + 1) + i + 1;
+		ibo_ptr_lines[4 * i + 2] = m_index_vertices + 1 * (mesh_curved + 1) + i + 0;
+		ibo_ptr_lines[4 * i + 3] = m_index_vertices + 1 * (mesh_curved + 1) + i + 1;
+		ibo_ptr_triangles[6 * i + 0] = m_index_vertices + 2 * (mesh_curved + 1) + i + 0;
+		ibo_ptr_triangles[6 * i + 1] = m_index_vertices + 3 * (mesh_curved + 1) + i + 0;
+		ibo_ptr_triangles[6 * i + 2] = m_index_vertices + 3 * (mesh_curved + 1) + i + 1;
+		ibo_ptr_triangles[6 * i + 3] = m_index_vertices + 2 * (mesh_curved + 1) + i + 0;
+		ibo_ptr_triangles[6 * i + 4] = m_index_vertices + 3 * (mesh_curved + 1) + i + 1;
+		ibo_ptr_triangles[6 * i + 5] = m_index_vertices + 2 * (mesh_curved + 1) + i + 1;
+	}
+	ibo_ptr_lines[4 * mesh_curved + 0] = m_index_vertices + 0 * (mesh_curved + 1);
+	ibo_ptr_lines[4 * mesh_curved + 1] = m_index_vertices + 1 * (mesh_curved + 1);
+	ibo_ptr_lines[4 * mesh_curved + 2] = m_index_vertices + 1 * (mesh_curved + 1) + mesh_curved;
+	ibo_ptr_lines[4 * mesh_curved + 3] = m_index_vertices + 1 * (mesh_curved + 1) + mesh_curved;
+	//update
+	m_index_lines += 4 * (mesh_curved + 1);
+	m_index_vertices += 4 * (mesh_curved + 1);
+	m_index_triangles += 6 * (mesh_curved + 0);
+}
+void Draw::update_fiber_rectangle(const sections::fibers::Rectangle* fiber)
+{
+	//data
+	const double s2 = fiber->width();
+	const double s3 = fiber->height();
+	const double x2 = fiber->position(0);
+	const double x3 = fiber->position(1);
+	uint32_t* ibo_ptr_lines = m_ibo.data() + m_counter_points + m_index_lines;
+	uint32_t* ibo_ptr_triangles = m_ibo.data() + m_counter_points + m_counter_lines + m_index_triangles;
+	canvas::vertices::Model3D* vbo_ptr = (canvas::vertices::Model3D*) m_vbo.data() + m_index_vertices;
+	//vbo data
+	for(uint32_t i = 0; i < 8; i++) vbo_ptr[i].m_position[2] = 0;
+	for(uint32_t i = 0; i < 4; i++) vbo_ptr[i + 4].m_color = "blue";
+	for(uint32_t i = 0; i < 4; i++) vbo_ptr[i + 0].m_color = "white";
+	vbo_ptr[0].m_position[0] = vbo_ptr[3].m_position[0] = vbo_ptr[4].m_position[0] = vbo_ptr[7].m_position[0] = x2 - s2 / 2;
+	vbo_ptr[1].m_position[0] = vbo_ptr[2].m_position[0] = vbo_ptr[5].m_position[0] = vbo_ptr[6].m_position[0] = x2 + s2 / 2;
+	vbo_ptr[0].m_position[1] = vbo_ptr[1].m_position[1] = vbo_ptr[4].m_position[1] = vbo_ptr[5].m_position[1] = x3 - s3 / 2;
+	vbo_ptr[2].m_position[1] = vbo_ptr[3].m_position[1] = vbo_ptr[6].m_position[1] = vbo_ptr[7].m_position[1] = x3 + s3 / 2;
+	//ibo data
+	ibo_ptr_triangles[3 * 0 + 0] = m_index_vertices + 4;
+	ibo_ptr_triangles[3 * 0 + 1] = m_index_vertices + 5;
+	ibo_ptr_triangles[3 * 0 + 2] = m_index_vertices + 6;
+	ibo_ptr_triangles[3 * 1 + 0] = m_index_vertices + 4;
+	ibo_ptr_triangles[3 * 1 + 1] = m_index_vertices + 6;
+	ibo_ptr_triangles[3 * 1 + 2] = m_index_vertices + 7;
+	ibo_ptr_lines[2 * 0 + 0] = ibo_ptr_lines[2 * 3 + 1] = m_index_vertices + 0;
+	ibo_ptr_lines[2 * 1 + 0] = ibo_ptr_lines[2 * 0 + 1] = m_index_vertices + 1;
+	ibo_ptr_lines[2 * 2 + 0] = ibo_ptr_lines[2 * 1 + 1] = m_index_vertices + 2;
+	ibo_ptr_lines[2 * 3 + 0] = ibo_ptr_lines[2 * 2 + 1] = m_index_vertices + 3;
+	//update
+	m_index_lines += 8;
+	m_index_vertices += 8;
+	m_index_triangles += 6;
 }
