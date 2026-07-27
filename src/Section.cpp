@@ -6,11 +6,15 @@
 //gmsh
 #include <gmsh.h>
 
+//SuiteSparse
+#include "suitesparse/umfpack.h"
+
 //Sections
 #include "Sections/inc/Section.hpp"
 
 //Math
 #include "Math/inc/Linear/Vector.hpp"
+#include "Math/inc/Linear/Sparse.hpp"
 #include "Math/inc/Solvers/Bisection.hpp"
 
 namespace sections
@@ -20,7 +24,7 @@ namespace sections
 		m_status{false}, m_mesh_size{0}, 
 		m_area{0}, m_inertia{0, 0}, m_shear_area{0, 0, 0}, m_shear_center{0, 0}, 
 		m_torsion_constant{0}, m_warping_constant{0}, m_plastic_center{0, 0}, m_elastic_modulus{0, 0}, m_plastic_modulus{0, 0},
-		m_u{nullptr}, m_f{nullptr}, m_K{nullptr}
+		m_rows_map{nullptr}, m_cols_map{nullptr}, m_rows_triplet{nullptr}, m_cols_triplet{nullptr}, m_u{nullptr}, m_f{nullptr}, m_K{nullptr}
 	{
 		return;
 	}
@@ -31,6 +35,10 @@ namespace sections
 		delete[] m_u;
 		delete[] m_f;
 		delete[] m_K;
+		delete[] m_rows_map;
+		delete[] m_cols_map;
+		delete[] m_rows_triplet;
+		delete[] m_cols_triplet;
 	}
 
 	//data
@@ -117,18 +125,18 @@ namespace sections
 		printf("Area: %+.2e\n", m_area);
 		printf("Inertia 2: %+.2e\n", m_inertia[0]);
 		printf("Inertia 3: %+.2e\n", m_inertia[1]);
-		printf("Shear area 2: %+.2e\n", m_shear_area[0]);
-		printf("Shear area 3: %+.2e\n", m_shear_area[1]);
-		printf("Shear center 2: %+.2e\n", m_shear_center[0]);
-		printf("Shear center 3: %+.2e\n", m_shear_center[1]);
-		printf("Torsion constant: %+.2e\n", m_torsion_constant);
-		printf("Warping constant: %+.2e\n", m_warping_constant);
-		printf("Plastic center 2: %+.2e\n", m_plastic_center[0]);
-		printf("Plastic center 3: %+.2e\n", m_plastic_center[1]);
-		printf("Elastic modulus 2: %+.2e\n", m_elastic_modulus[0]);
-		printf("Elastic modulus 3: %+.2e\n", m_elastic_modulus[1]);
-		printf("Plastic modulus 2: %+.2e\n", m_plastic_modulus[0]);
-		printf("Plastic modulus 3: %+.2e\n", m_plastic_modulus[1]);
+		printf("Shear Area 2: %+.2e\n", m_shear_area[0]);
+		printf("Shear Area 3: %+.2e\n", m_shear_area[1]);
+		printf("Shear Center 2: %+.2e\n", m_shear_center[0]);
+		printf("Shear Center 3: %+.2e\n", m_shear_center[1]);
+		printf("Torsion Constant: %+.2e\n", m_torsion_constant);
+		printf("Warping Constant: %+.2e\n", m_warping_constant);
+		printf("Plastic Center 2: %+.2e\n", m_plastic_center[0]);
+		printf("Plastic Center 3: %+.2e\n", m_plastic_center[1]);
+		printf("Elastic Modulus 2: %+.2e\n", m_elastic_modulus[0]);
+		printf("Elastic Modulus 3: %+.2e\n", m_elastic_modulus[1]);
+		printf("Plastic Modulus 2: %+.2e\n", m_plastic_modulus[0]);
+		printf("Plastic Modulus 3: %+.2e\n", m_plastic_modulus[1]);
 	}
 
 	//setup
@@ -171,16 +179,43 @@ namespace sections
 	{
 		//data
 		const uint32_t nn = m_nodes.size();
+		const uint32_t ne = m_elements.size();
+		const uint32_t ni = m_isolated.size();
 		//setup
 		delete[] m_u;
 		delete[] m_f;
 		delete[] m_K;
+		delete[] m_rows_map;
+		delete[] m_cols_map;
+		delete[] m_rows_triplet;
+		delete[] m_cols_triplet;
 		m_u = new double[3 * nn];
 		m_f = new double[3 * nn];
-		m_K = new double[nn * nn];
-		memset(m_u, 0, 3 * nn * sizeof(double));
+		m_cols_map = new int32_t[nn + 1];
+		m_rows_map = new int32_t[36 * ne + ni];
+		m_rows_triplet = new int32_t[36 * ne + ni];
+		m_cols_triplet = new int32_t[36 * ne + ni];
+		for(uint32_t i = 0; i < ne; i++)
+		{
+			for(uint32_t j = 0; j < 6; j++)
+			{
+				for(uint32_t k = 0; k < 6; k++)
+				{
+					m_rows_triplet[36 * i + 6 * j + k] = m_elements[i].m_nodes[j];
+					m_cols_triplet[36 * i + 6 * j + k] = m_elements[i].m_nodes[k];
+				}
+			}
+		}
+		for(uint32_t i = 0; i < ni; i++)
+		{
+			m_rows_triplet[36 * ne + i] = m_isolated[i];
+			m_cols_triplet[36 * ne + i] = m_isolated[i];
+		}
+		umfpack_di_triplet_to_col(nn, nn, 36 * ne + ni, m_rows_triplet, m_cols_triplet, nullptr, m_cols_map, m_rows_map, nullptr, nullptr);
+		//setup
+		m_K = new double[m_cols_map[nn]];
 		memset(m_f, 0, 3 * nn * sizeof(double));
-		memset(m_K, 0, nn * nn * sizeof(double));
+		memset(m_K, 0, m_cols_map[nn] * sizeof(double));
 	}
 	void Section::setup_elements(void)
 	{
@@ -263,9 +298,7 @@ namespace sections
 		}
 		//solve
 		warping_fix();
-		math::Matrix u(m_u, nn, 3);
-		math::Matrix f(m_f, nn, 3);
-		if(!math::Matrix(m_K, nn, nn).solve(u, f))
+		if(!math::Sparse(m_K, m_rows_map, m_cols_map, nn, nn).solve(m_u, m_f, 3))
 		{
 			throw std::runtime_error("Error: Unable to solve warping problem!");
 		}
@@ -361,17 +394,18 @@ namespace sections
 	{
 		//data
 		const uint32_t nn = m_nodes.size();
+		math::Sparse Ks(m_K, m_rows_map, m_cols_map, nn, nn);
 		//diagonal
 		double Kd = 0;
 		for(uint32_t i = 0; i < nn; i++)
 		{
-			Kd += m_K[i + nn * i];
+			Kd += Ks(i, i);
 		}
 		//stiffness
-		m_K[0] += Kd;
+		Ks(0, 0) += Kd;
 		for(uint32_t i : m_isolated)
 		{
-			m_K[i + nn * i] += Kd;
+			Ks(i, i) += Kd;
 		}
 	}
 	void Section::warping_center(void)

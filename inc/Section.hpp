@@ -90,6 +90,10 @@ namespace sections
 		double m_elastic_modulus[2];
 		double m_plastic_modulus[2];
 
+		int32_t* m_rows_map;
+		int32_t* m_cols_map;
+		int32_t* m_rows_triplet;
+		int32_t* m_cols_triplet;
 		double *m_u, *m_f, *m_K;
 		std::vector<Node> m_nodes;
 		std::vector<Element> m_elements;
