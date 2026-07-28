@@ -10,6 +10,7 @@
 namespace sections
 {
 	class Section;
+	class Element;
 }
 
 namespace sections
@@ -54,6 +55,10 @@ namespace sections
 			double m_orientation;
 			double* m_residual_stress;
 			materials::Point m_material_point;
+
+			//friends
+			friend class sections::Section;
+			friend class sections::Element;
 		};
 	}
 }

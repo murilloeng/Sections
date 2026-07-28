@@ -6,7 +6,14 @@
 namespace sections
 {
 	class Section;
+	namespace fibers
+	{
+		class Fiber;
+	}
+}
 
+namespace sections
+{
 	class Element
 	{
 	public:
@@ -16,12 +23,12 @@ namespace sections
 		//Destructor
 		~Element(void);
 
+		//print
+		void print(void) const;
+
 		//data
 		uint32_t node(uint32_t) const;
 		const uint32_t* node(void) const;
-
-		//print
-		void print(void) const;
 
 	private:
 		//assemble
@@ -55,11 +62,17 @@ namespace sections
 		double* warping(double*, const double*) const;
 		double* position(double*, const double*) const;
 
+		//fibers
+		bool inside(const double*) const;
+		void fiber_setup(fibers::Fiber&) const;
+		void fiber_position(double*, const fibers::Fiber&) const;
+
 		//data
 		Section* m_section;
 		uint32_t m_nodes[6];
 
 		//friends
-		friend class Section;
+		friend class sections::Section;
+		friend class sections::fibers::Fiber;
 	};
 }

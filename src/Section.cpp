@@ -122,6 +122,7 @@ namespace sections
 		compute_plastic_center();
 		compute_elastic_modulus();
 		compute_plastic_modulus();
+		for(fibers::Fiber* fiber : m_fibers) fiber->setup(this);
 	}
 
 	//print

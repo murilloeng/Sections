@@ -27,8 +27,7 @@ int main(void)
 	try
 	{
 		//data
-		sections::CHS section;
-		section.fibers_angle(20);
+		sections::Rectangle section;
 		//compute
 		section.compute();
 		//print

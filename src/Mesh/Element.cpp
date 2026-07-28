@@ -8,7 +8,7 @@
 #include "Sections/inc/Mesh/Element.hpp"
 
 //Math
-#include "Math/inc/Linear/Matrix.hpp"
+#include "Math/inc/Linear/Vector.hpp"
 #include "Math/inc/Linear/Sparse.hpp"
 
 //static
@@ -22,6 +22,11 @@ static const double A[] = {
 };
 static const double w[] = {1, 1};
 static const double s[] = {-sqrt(3) / 3, +sqrt(3) / 3};
+
+static double norm(const double* x1, const double* x2)
+{
+	return sqrt((x2[0] - x1[0]) * (x2[0] - x1[0]) + (x2[1] - x1[1]) * (x2[1] - x1[1]));
+}
 
 namespace sections
 {
@@ -37,16 +42,6 @@ namespace sections
 		return;
 	}
 
-	//data
-	const uint32_t* Element::node(void) const
-	{
-		return m_nodes;
-	}
-	uint32_t Element::node(uint32_t index) const
-	{
-		return m_nodes[index];
-	}
-
 	//print
 	void Element::print(void) const
 	{
@@ -55,6 +50,16 @@ namespace sections
 			printf("%d ", node);
 		}
 		printf("\n");
+	}
+
+	//data
+	const uint32_t* Element::node(void) const
+	{
+		return m_nodes;
+	}
+	uint32_t Element::node(uint32_t index) const
+	{
+		return m_nodes[index];
 	}
 
 	//assemble
@@ -267,12 +272,8 @@ namespace sections
 	}
 	double Element::jacobian(const double* p) const
 	{
-		//data
-		math::Matrix B(6, 2), P(2, 6);
-		//jacobian
-		positions(P.data());
-		gradient(B.data(), p);
-		return (P * B).determinant();
+		double J[4];
+		return jacobian(J, p);
 	}
 	double Element::jacobian(double* J, const double* p) const
 	{
@@ -363,5 +364,69 @@ namespace sections
 		}
 		//return
 		return x;
+	}
+
+	//fibers
+	bool Element::inside(const double* x) const
+	{
+		//position
+		const double* x0 = m_section->m_nodes[m_nodes[0]].m_position;
+		const double* x1 = m_section->m_nodes[m_nodes[1]].m_position;
+		const double* x2 = m_section->m_nodes[m_nodes[2]].m_position;
+		//reference
+		const double l0 = norm(x0, x1);
+		const double l1 = norm(x1, x2);
+		const double l2 = norm(x2, x0);
+		const double ln = fmin(l0, fmin(l1, l2));
+		//return
+		return
+			(x0[0] - x[0]) * (x1[1] - x[1]) - (x1[0] - x[0]) * (x0[1] - x[1]) > -1.00e-5 * ln && 
+			(x1[0] - x[0]) * (x2[1] - x[1]) - (x2[0] - x[0]) * (x1[1] - x[1]) > -1.00e-5 * ln && 
+			(x2[0] - x[0]) * (x0[1] - x[1]) - (x0[0] - x[0]) * (x2[1] - x[1]) > -1.00e-5 * ln;
+	}
+	void Element::fiber_setup(fibers::Fiber& fiber) const
+	{
+		//data
+		double p[2], N[6];
+		math::Matrix B(6, 2), J(2, 2), un(3, 6);
+		//position
+		fiber_position(p, fiber);
+		//warping
+		function(N, p);
+		warping(fiber.m_warping, N);
+		//gradient
+		gradient(B.data(), p);
+		jacobian(J.data(), p);
+		for(uint32_t i = 0; i < 6; i++)
+		{
+			for(uint32_t j = 0; j < 3; j++)
+			{
+				un(j, i) = m_section->m_nodes[m_nodes[i]].m_warping[j];
+			}
+		}
+		math::Matrix(fiber.m_gradient, 3, 2) = un * B * J.inverse();
+	}
+	void Element::fiber_position(double* p, const fibers::Fiber& fiber) const
+	{
+		//data
+		p[0] = p[1] = -1;
+		math::Matrix B(6, 2), P(2, 6), J(2, 2);
+		math::Vector r(2), N(6), dp(2), x(fiber.m_position, 2);
+		//setup
+		positions(P.data());
+		//loop
+		while(true)
+		{
+			//state
+			function(N.data(), p);
+			gradient(B.data(), p);
+			//residue
+			r = x - P * N;
+			if(r.norm() < 1e-5) break;
+			//update
+			J = P * B;
+			J.solve(dp, r);
+			math::Vector(p, 2) += dp;
+		}
 	}
 }

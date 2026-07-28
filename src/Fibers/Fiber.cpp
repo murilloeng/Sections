@@ -1,4 +1,6 @@
 //Sections
+#include "Sections/inc/Section.hpp"
+#include "Sections/inc/Mesh/Element.hpp"
 #include "Sections/inc/Fibers/Fiber.hpp"
 #include "Sections/inc/Fibers/Rectangle.hpp"
 
@@ -48,7 +50,7 @@ namespace sections
 		}
 		double Fiber::gradient(uint32_t iw, uint32_t iz) const
 		{
-			return m_gradient[2 * iw + iz];
+			return m_gradient[3 * iz + iw];
 		}
 
 		materials::Point& Fiber::material_point(void)
@@ -75,7 +77,14 @@ namespace sections
 		//analysis
 		void Fiber::setup(Section* section)
 		{
-			return;
+			for(const sections::Element& element : section->elements())
+			{
+				if(element.inside(m_position))
+				{
+					element.fiber_setup(*this);
+					break;
+				}
+			}
 		}
 	}
 }
