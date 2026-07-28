@@ -10,6 +10,7 @@
 //Canvas
 #include "Canvas/inc/Scene/Scene.hpp"
 #include "Canvas/inc/Cameras/Click.hpp"
+#include "Canvas/inc/Objects/Image/Palette.hpp"
 
 class Engine
 {
@@ -65,4 +66,5 @@ private:
 	GLFWwindow* m_window;
 	canvas::Scene* m_scene;
 	sections::Section* m_section;
+	canvas::objects::Palette* m_palette;
 };

@@ -97,6 +97,19 @@ namespace sections
 		return m_mesh_size = mesh_size;
 	}
 
+	const Node& Section::node(uint32_t index) const
+	{
+		return m_nodes[index];
+	}
+	const Element& Section::element(uint32_t index) const
+	{
+		return m_elements[index];
+	}
+	const fibers::Fiber* Section::fiber(uint32_t index) const
+	{
+		return m_fibers[index];
+	}
+
 	const std::vector<Node>& Section::nodes(void) const
 	{
 		return m_nodes;

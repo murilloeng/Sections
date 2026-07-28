@@ -2,9 +2,12 @@
 
 //Sections
 #include "Sections/inc/Section.hpp"
-#include "Sections/Test/inc/What.hpp"
 #include "Sections/inc/Fibers/Arc.hpp"
 #include "Sections/inc/Fibers/Rectangle.hpp"
+
+//Test
+#include "Sections/Test/inc/Type.hpp"
+#include "Sections/Test/inc/What.hpp"
 
 //Canvas
 #include "Canvas/inc/Objects/Bases/BaseModel3D.hpp"
@@ -18,14 +21,13 @@ public:
 	//destructor
 	~Draw(void);
 
-	//enums
-	enum class Type : uint32_t { Mesh, Fibers, Last };
-
 	//data
 	What& what(void);
 
 	Type type(Type);
 	Type type(void) const;
+	
+	void extrema(double&, double&) const;
 
 	sections::Section* section(void);
 	sections::Section* section(sections::Section*);
@@ -35,6 +37,9 @@ private:
 	void draw(void) override;
 	void setup(void) override;
 	void update(void) override;
+
+	//compute
+	void compute_extrema(void);
 
 	//setup
 	void setup_nodes(void);
@@ -50,9 +55,14 @@ private:
 	void update_fiber_arc(const sections::fibers::Arc*);
 	void update_fiber_rectangle(const sections::fibers::Rectangle*);
 
+	//colors
+	canvas::Color node_color(const sections::Node*) const;
+	canvas::Color fiber_color(const sections::fibers::Fiber*) const;
+
 	//data
 	Type m_type;
 	What m_what;
+	double m_ue[6];
 	sections::Section* m_section;
 
 	uint32_t m_index_lines;

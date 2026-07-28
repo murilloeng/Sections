@@ -1,5 +1,7 @@
 //std
 #include <cmath>
+#include <cfloat>
+#include <algorithm>
 
 //Sections
 #include "Sections/inc/Section.hpp"
@@ -10,13 +12,15 @@
 //Canvas
 #include "Canvas/inc/Scene/Scene.hpp"
 #include "Canvas/inc/Vertices/Model3D.hpp"
+#include "Canvas/inc/Palettes/Palette.hpp"
 #include "Canvas/inc/Objects/Tessellator.hpp"
+#include "Canvas/inc/Objects/Image/Palette.hpp"
 
 //data
 static const uint32_t mesh_curved = 10;
 
 //constructor
-Draw::Draw(void) : m_type{Type::Fibers}
+Draw::Draw(void) : m_type{Type::FibersWarpingT}
 {
 	return;
 }
@@ -33,13 +37,29 @@ What& Draw::what(void)
 	return m_what;
 }
 
-Draw::Type Draw::type(Type type)
+Type Draw::type(Type type)
 {
 	return m_type = type;
 }
-Draw::Type Draw::type(void) const
+Type Draw::type(void) const
 {
 	return m_type;
+}
+
+void Draw::extrema(double& s1, double& s2) const
+{
+	//data
+	const Type tm[] = {Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3};
+	const Type tf[] = {Type::FibersWarpingT, Type::FibersWarpingS2, Type::FibersWarpingS3};
+	//warping
+	for(uint32_t i = 0; i < 3; i++)
+	{
+		if(m_type == tm[i] || m_type == tf[i])
+		{
+			s1 = m_ue[i + 0];
+			s2 = m_ue[i + 3];
+		}
+	}
 }
 
 sections::Section* Draw::section(void)
@@ -48,7 +68,9 @@ sections::Section* Draw::section(void)
 }
 sections::Section* Draw::section(sections::Section* section)
 {
-	return m_section = section;
+	m_section = section;
+	compute_extrema();
+	return section;
 }
 
 //draw
@@ -71,13 +93,15 @@ void Draw::setup(void)
 	m_counter_points = 0;
 	m_counter_vertices = 0;
 	m_counter_triangles = 0;
+	const Type tm[] = {Type::Mesh, Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3};
+	const Type tf[] = {Type::Fibers, Type::FibersWarpingT, Type::FibersWarpingS2, Type::FibersWarpingS3};
 	//setup
-	if(m_type == Type::Mesh)
+	if(std::find(tm, tm + 4, m_type) != tm + 4)
 	{
 		if(m_what.nodes()) setup_nodes();
 		if(m_what.elements()) setup_elements();
 	}
-	else if(m_type == Type::Fibers)
+	else if(std::find(tf, tf + 4, m_type) != tf + 4)
 	{
 		if(m_what.fibers()) setup_fibers();
 	}
@@ -92,19 +116,41 @@ void Draw::update(void)
 	m_index_points = 0;
 	m_index_vertices = 0;
 	m_index_triangles = 0;
+	const Type tm[] = {Type::Mesh, Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3};
+	const Type tf[] = {Type::Fibers, Type::FibersWarpingT, Type::FibersWarpingS2, Type::FibersWarpingS3};
 	//update
-	if(m_type == Type::Mesh)
+	if(std::find(tm, tm + 4, m_type) != tm + 4)
 	{
 		if(m_what.nodes()) update_nodes();
 		if(m_what.elements()) update_elements();
 	}
-	else if(m_type == Type::Fibers)
+	else if(std::find(tf, tf + 4, m_type) != tf + 4)
 	{
 		if(m_what.fibers()) update_fibers();
 	}
 	//transfer
 	m_vbo.transfer();
 	m_ibo.transfer();
+}
+
+//compute
+void Draw::compute_extrema(void)
+{
+	//setup
+	for(uint32_t i = 0; i < 3; i++)
+	{
+		m_ue[i + 0] = +DBL_MAX;
+		m_ue[i + 3] = -DBL_MAX;
+	}
+	//search
+	for(const sections::Node& node : m_section->nodes())
+	{
+		for(uint32_t i = 0; i < 3; i++)
+		{
+			m_ue[i + 0] = fmin(m_ue[i + 0], node.warping(i));
+			m_ue[i + 3] = fmax(m_ue[i + 3], node.warping(i));
+		}
+	}
 }
 
 //setup
@@ -197,7 +243,6 @@ void Draw::update_elements(void)
 	//vbo data
 	for(uint32_t i = 0; i < nn; i++)
 	{
-		vbo_ptr[i + 1 * nn].m_color = "blue";
 		vbo_ptr[i + 0 * nn].m_color = "white";
 		vbo_ptr[i + 0 * nn].m_position[2] = 0;
 		vbo_ptr[i + 1 * nn].m_position[2] = 0;
@@ -205,6 +250,7 @@ void Draw::update_elements(void)
 		vbo_ptr[i + 0 * nn].m_position[1] = +nodes[i].position(0);
 		vbo_ptr[i + 1 * nn].m_position[0] = -nodes[i].position(1);
 		vbo_ptr[i + 1 * nn].m_position[1] = +nodes[i].position(0);
+		vbo_ptr[i + 1 * nn].m_color = node_color(&m_section->node(i));
 	}
 	//ibo data
 	for(uint32_t i = 0; i < ne; i++)
@@ -242,10 +288,10 @@ void Draw::update_fiber_arc(const sections::fibers::Arc* fiber)
 	//vbo data
 	for(uint32_t i = 0; i <= mesh_curved; i++)
 	{
-		vbo_ptr[2 * (mesh_curved + 1) + i].m_color = "blue";
-		vbo_ptr[3 * (mesh_curved + 1) + i].m_color = "blue";
 		vbo_ptr[0 * (mesh_curved + 1) + i].m_color = "white";
 		vbo_ptr[1 * (mesh_curved + 1) + i].m_color = "white";
+		vbo_ptr[2 * (mesh_curved + 1) + i].m_color = fiber_color(fiber);
+		vbo_ptr[3 * (mesh_curved + 1) + i].m_color = fiber_color(fiber);
 		vbo_ptr[0 * (mesh_curved + 1) + i].m_position[2] = vbo_ptr[2 * (mesh_curved + 1) + i].m_position[2] = 0;
 		vbo_ptr[1 * (mesh_curved + 1) + i].m_position[2] = vbo_ptr[3 * (mesh_curved + 1) + i].m_position[2] = 0;
 		vbo_ptr[0 * (mesh_curved + 1) + i].m_position[0] = vbo_ptr[2 * (mesh_curved + 1) + i].m_position[0] = r1 * cos(q + a * i / mesh_curved);
@@ -288,8 +334,8 @@ void Draw::update_fiber_rectangle(const sections::fibers::Rectangle* fiber)
 	canvas::vertices::Model3D* vbo_ptr = (canvas::vertices::Model3D*) m_vbo.data() + m_index_vertices;
 	//vbo data
 	for(uint32_t i = 0; i < 8; i++) vbo_ptr[i].m_position[2] = 0;
-	for(uint32_t i = 0; i < 4; i++) vbo_ptr[i + 4].m_color = "blue";
 	for(uint32_t i = 0; i < 4; i++) vbo_ptr[i + 0].m_color = "white";
+	for(uint32_t i = 0; i < 4; i++) vbo_ptr[i + 4].m_color = fiber_color(fiber);
 	vbo_ptr[0].m_position[0] = vbo_ptr[3].m_position[0] = vbo_ptr[4].m_position[0] = vbo_ptr[7].m_position[0] = x2 - s2 / 2;
 	vbo_ptr[1].m_position[0] = vbo_ptr[2].m_position[0] = vbo_ptr[5].m_position[0] = vbo_ptr[6].m_position[0] = x2 + s2 / 2;
 	vbo_ptr[0].m_position[1] = vbo_ptr[1].m_position[1] = vbo_ptr[4].m_position[1] = vbo_ptr[5].m_position[1] = x3 - s3 / 2;
@@ -309,4 +355,38 @@ void Draw::update_fiber_rectangle(const sections::fibers::Rectangle* fiber)
 	m_index_lines += 8;
 	m_index_vertices += 8;
 	m_index_triangles += 6;
+}
+
+//color
+canvas::Color Draw::node_color(const sections::Node* node) const
+{
+	//data
+	const Type tn[] = {Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3};
+	const canvas::palettes::Palette& palette = ((canvas::objects::Palette*) m_scene->object(1))->palette();
+	//color
+	for(uint32_t i = 0; i < 3; i++)
+	{
+		if(m_type == tn[i])
+		{
+			return palette.color(node->warping(i), m_ue[i + 0], m_ue[i + 3]);
+		}
+	}
+	//return
+	return "blue";
+}
+canvas::Color Draw::fiber_color(const sections::fibers::Fiber* fiber) const
+{
+	//data
+	const Type tn[] = {Type::FibersWarpingT, Type::FibersWarpingS2, Type::FibersWarpingS3};
+	const canvas::palettes::Palette& palette = ((canvas::objects::Palette*) m_scene->object(1))->palette();
+	//color
+	for(uint32_t i = 0; i < 3; i++)
+	{
+		if(m_type == tn[i])
+		{
+			return palette.color(fiber->warping(i), m_ue[i + 0], m_ue[i + 3]);
+		}
+	}
+	//return
+	return "blue";
 }

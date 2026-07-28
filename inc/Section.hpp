@@ -38,6 +38,10 @@ namespace sections
 		double mesh_size(double);
 		double mesh_size(void) const;
 
+		const Node& node(uint32_t) const;
+		const Element& element(uint32_t) const;
+		const fibers::Fiber* fiber(uint32_t) const;
+
 		const std::vector<Node>& nodes(void) const;
 		const std::vector<Element>& elements(void) const;
 		const std::vector<fibers::Fiber*>& fibers(void) const;
