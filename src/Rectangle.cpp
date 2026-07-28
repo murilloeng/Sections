@@ -58,7 +58,11 @@ namespace sections
 	//geometry
 	void Rectangle::setup_fibers(void)
 	{
-		fibers::Fiber::create_rectangles(m_fibers, -m_width / 2, -m_height / 2, m_width, m_height, m_fibers_width, m_fibers_height);
+		const double w = m_width;
+		const double h = m_height;
+		const uint32_t nw = m_fibers_width;
+		const uint32_t nh = m_fibers_height;
+		fibers::Fiber::create_rectangles(m_fibers, -h / 2, -w / 2, h, w, nh, nw);
 	}
 	void Rectangle::setup_geometry(void) const
 	{

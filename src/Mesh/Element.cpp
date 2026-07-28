@@ -23,11 +23,6 @@ static const double A[] = {
 static const double w[] = {1, 1};
 static const double s[] = {-sqrt(3) / 3, +sqrt(3) / 3};
 
-static double norm(const double* x1, const double* x2)
-{
-	return sqrt((x2[0] - x1[0]) * (x2[0] - x1[0]) + (x2[1] - x1[1]) * (x2[1] - x1[1]));
-}
-
 namespace sections
 {
 	//constructor
@@ -369,20 +364,16 @@ namespace sections
 	//fibers
 	bool Element::inside(const double* x) const
 	{
-		//position
+		//data
 		const double* x0 = m_section->m_nodes[m_nodes[0]].m_position;
 		const double* x1 = m_section->m_nodes[m_nodes[1]].m_position;
 		const double* x2 = m_section->m_nodes[m_nodes[2]].m_position;
-		//reference
-		const double l0 = norm(x0, x1);
-		const double l1 = norm(x1, x2);
-		const double l2 = norm(x2, x0);
-		const double ln = fmin(l0, fmin(l1, l2));
+		const double A = ((x1[0] - x0[0]) * (x2[1] - x0[1]) - (x1[1] - x0[1]) * (x2[0] - x0[0])) / 2;
 		//return
 		return
-			(x0[0] - x[0]) * (x1[1] - x[1]) - (x1[0] - x[0]) * (x0[1] - x[1]) > -1.00e-5 * ln && 
-			(x1[0] - x[0]) * (x2[1] - x[1]) - (x2[0] - x[0]) * (x1[1] - x[1]) > -1.00e-5 * ln && 
-			(x2[0] - x[0]) * (x0[1] - x[1]) - (x0[0] - x[0]) * (x2[1] - x[1]) > -1.00e-5 * ln;
+			(x0[0] - x[0]) * (x1[1] - x[1]) - (x1[0] - x[0]) * (x0[1] - x[1]) > -1.00e-5 * A && 
+			(x1[0] - x[0]) * (x2[1] - x[1]) - (x2[0] - x[0]) * (x1[1] - x[1]) > -1.00e-5 * A && 
+			(x2[0] - x[0]) * (x0[1] - x[1]) - (x0[0] - x[0]) * (x2[1] - x[1]) > -1.00e-5 * A;
 	}
 	void Element::fiber_setup(fibers::Fiber& fiber) const
 	{

@@ -53,7 +53,7 @@ namespace sections
 		printf("Position: ");
 		for(const double& position : m_position) printf("%+.6e ", position);
 		//warping
-		printf("Warping:");
+		printf("Warping: ");
 		for(const double& warping : m_warping) printf("%+.6e ", warping);
 		//end line
 		printf("\n");

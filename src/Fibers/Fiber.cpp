@@ -1,3 +1,6 @@
+//std
+#include <cstdio>
+
 //Sections
 #include "Sections/inc/Section.hpp"
 #include "Sections/inc/Mesh/Element.hpp"
@@ -9,7 +12,8 @@ namespace sections
 	namespace fibers
 	{
 		//constructor
-		Fiber::Fiber(void)
+		Fiber::Fiber(void) : 
+			m_area{0}, m_warping{0, 0, 0}, m_position{0, 0}, m_gradient{0, 0, 0, 0, 0, 0}, m_residual_stress{nullptr}
 		{
 			return;
 		}
@@ -17,7 +21,7 @@ namespace sections
 		//destructor
 		Fiber::~Fiber(void)
 		{
-			return;
+			delete[] m_residual_stress;
 		}
 
 		//data

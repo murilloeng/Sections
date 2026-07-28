@@ -62,7 +62,7 @@ private:
 	//data
 	Type m_type;
 	What m_what;
-	double m_ue[6];
+	double m_ue[6], m_ge[12];
 	sections::Section* m_section;
 
 	uint32_t m_index_lines;

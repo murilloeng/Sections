@@ -20,7 +20,7 @@
 static const uint32_t mesh_curved = 10;
 
 //constructor
-Draw::Draw(void) : m_type{Type::FibersWarpingT}
+Draw::Draw(void) : m_type{Type::FibersGradientS33}
 {
 	return;
 }
@@ -49,15 +49,34 @@ Type Draw::type(void) const
 void Draw::extrema(double& s1, double& s2) const
 {
 	//data
-	const Type tm[] = {Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3};
-	const Type tf[] = {Type::FibersWarpingT, Type::FibersWarpingS2, Type::FibersWarpingS3};
+	const Type tmw[] = {
+		Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3
+	};
+	const Type tfw[] = {
+		Type::FibersWarpingT, Type::FibersWarpingS2, Type::FibersWarpingS3
+	};
+	const Type tmg[] = {
+		Type::MeshGradientT2, Type::MeshGradientS22, Type::MeshGradientS32, Type::MeshGradientT3, Type::MeshGradientS23, Type::MeshGradientS33
+	};
+	const Type tfg[] = {
+		Type::FibersGradientT2, Type::FibersGradientS22, Type::FibersGradientS32, Type::FibersGradientT3, Type::FibersGradientS23, Type::FibersGradientS33
+	};
 	//warping
 	for(uint32_t i = 0; i < 3; i++)
 	{
-		if(m_type == tm[i] || m_type == tf[i])
+		if(m_type == tmw[i] || m_type == tfw[i])
 		{
 			s1 = m_ue[i + 0];
 			s2 = m_ue[i + 3];
+		}
+	}
+	//gradient
+	for(uint32_t i = 0; i < 6; i++)
+	{
+		if(m_type == tmg[i] || m_type == tfg[i])
+		{
+			s1 = m_ge[i + 0];
+			s2 = m_ge[i + 6];
 		}
 	}
 }
@@ -93,15 +112,21 @@ void Draw::setup(void)
 	m_counter_points = 0;
 	m_counter_vertices = 0;
 	m_counter_triangles = 0;
-	const Type tm[] = {Type::Mesh, Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3};
-	const Type tf[] = {Type::Fibers, Type::FibersWarpingT, Type::FibersWarpingS2, Type::FibersWarpingS3};
+	const Type tm[] = {
+		Type::Mesh, Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3,
+		Type::MeshGradientT2, Type::MeshGradientS22, Type::MeshGradientS32, Type::MeshGradientT3, Type::MeshGradientS23, Type::MeshGradientS33
+	};
+	const Type tf[] = {
+		Type::Fibers, Type::FibersWarpingT, Type::FibersWarpingS2, Type::FibersWarpingS3,
+		Type::FibersGradientT2, Type::FibersGradientS22, Type::FibersGradientS32, Type::FibersGradientT3, Type::FibersGradientS23, Type::FibersGradientS33
+	};
 	//setup
-	if(std::find(tm, tm + 4, m_type) != tm + 4)
+	if(std::find(tm, tm + 10, m_type) != tm + 10)
 	{
 		if(m_what.nodes()) setup_nodes();
 		if(m_what.elements()) setup_elements();
 	}
-	else if(std::find(tf, tf + 4, m_type) != tf + 4)
+	else if(std::find(tf, tf + 10, m_type) != tf + 10)
 	{
 		if(m_what.fibers()) setup_fibers();
 	}
@@ -116,15 +141,21 @@ void Draw::update(void)
 	m_index_points = 0;
 	m_index_vertices = 0;
 	m_index_triangles = 0;
-	const Type tm[] = {Type::Mesh, Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3};
-	const Type tf[] = {Type::Fibers, Type::FibersWarpingT, Type::FibersWarpingS2, Type::FibersWarpingS3};
+	const Type tm[] = {
+		Type::Mesh, Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3,
+		Type::MeshGradientT2, Type::MeshGradientS22, Type::MeshGradientS32, Type::MeshGradientT3, Type::MeshGradientS23, Type::MeshGradientS33
+	};
+	const Type tf[] = {
+		Type::Fibers, Type::FibersWarpingT, Type::FibersWarpingS2, Type::FibersWarpingS3,
+		Type::FibersGradientT2, Type::FibersGradientS22, Type::FibersGradientS32, Type::FibersGradientT3, Type::FibersGradientS23, Type::FibersGradientS33
+	};
 	//update
-	if(std::find(tm, tm + 4, m_type) != tm + 4)
+	if(std::find(tm, tm + 10, m_type) != tm + 10)
 	{
 		if(m_what.nodes()) update_nodes();
 		if(m_what.elements()) update_elements();
 	}
-	else if(std::find(tf, tf + 4, m_type) != tf + 4)
+	else if(std::find(tf, tf + 10, m_type) != tf + 10)
 	{
 		if(m_what.fibers()) update_fibers();
 	}
@@ -139,16 +170,25 @@ void Draw::compute_extrema(void)
 	//setup
 	for(uint32_t i = 0; i < 3; i++)
 	{
-		m_ue[i + 0] = +DBL_MAX;
-		m_ue[i + 3] = -DBL_MAX;
+		m_ue[i + 0] = m_ge[i + 0] = m_ge[i + 3] = +DBL_MAX;
+		m_ue[i + 3] = m_ge[i + 6] = m_ge[i + 9] = -DBL_MAX;
 	}
-	//search
+	//warping
 	for(const sections::Node& node : m_section->nodes())
 	{
 		for(uint32_t i = 0; i < 3; i++)
 		{
 			m_ue[i + 0] = fmin(m_ue[i + 0], node.warping(i));
 			m_ue[i + 3] = fmax(m_ue[i + 3], node.warping(i));
+		}
+	}
+	//gradient
+	for(const sections::fibers::Fiber* fiber : m_section->fibers())
+	{
+		for(uint32_t i = 0; i < 6; i++)
+		{
+			m_ge[i + 0] = fmin(m_ge[i + 0], fiber->gradient(i % 3, i / 3));
+			m_ge[i + 6] = fmax(m_ge[i + 6], fiber->gradient(i % 3, i / 3));
 		}
 	}
 }
@@ -336,10 +376,10 @@ void Draw::update_fiber_rectangle(const sections::fibers::Rectangle* fiber)
 	for(uint32_t i = 0; i < 8; i++) vbo_ptr[i].m_position[2] = 0;
 	for(uint32_t i = 0; i < 4; i++) vbo_ptr[i + 0].m_color = "white";
 	for(uint32_t i = 0; i < 4; i++) vbo_ptr[i + 4].m_color = fiber_color(fiber);
-	vbo_ptr[0].m_position[0] = vbo_ptr[3].m_position[0] = vbo_ptr[4].m_position[0] = vbo_ptr[7].m_position[0] = x2 - s2 / 2;
-	vbo_ptr[1].m_position[0] = vbo_ptr[2].m_position[0] = vbo_ptr[5].m_position[0] = vbo_ptr[6].m_position[0] = x2 + s2 / 2;
-	vbo_ptr[0].m_position[1] = vbo_ptr[1].m_position[1] = vbo_ptr[4].m_position[1] = vbo_ptr[5].m_position[1] = x3 - s3 / 2;
-	vbo_ptr[2].m_position[1] = vbo_ptr[3].m_position[1] = vbo_ptr[6].m_position[1] = vbo_ptr[7].m_position[1] = x3 + s3 / 2;
+	vbo_ptr[0].m_position[0] = vbo_ptr[3].m_position[0] = vbo_ptr[4].m_position[0] = vbo_ptr[7].m_position[0] = -x3 + s3 / 2;
+	vbo_ptr[1].m_position[0] = vbo_ptr[2].m_position[0] = vbo_ptr[5].m_position[0] = vbo_ptr[6].m_position[0] = -x3 - s3 / 2;
+	vbo_ptr[0].m_position[1] = vbo_ptr[1].m_position[1] = vbo_ptr[4].m_position[1] = vbo_ptr[5].m_position[1] = +x2 - s2 / 2;
+	vbo_ptr[2].m_position[1] = vbo_ptr[3].m_position[1] = vbo_ptr[6].m_position[1] = vbo_ptr[7].m_position[1] = +x2 + s2 / 2;
 	//ibo data
 	ibo_ptr_triangles[3 * 0 + 0] = m_index_vertices + 4;
 	ibo_ptr_triangles[3 * 0 + 1] = m_index_vertices + 5;
@@ -361,12 +401,12 @@ void Draw::update_fiber_rectangle(const sections::fibers::Rectangle* fiber)
 canvas::Color Draw::node_color(const sections::Node* node) const
 {
 	//data
-	const Type tn[] = {Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3};
+	const Type tw[] = {Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3};
 	const canvas::palettes::Palette& palette = ((canvas::objects::Palette*) m_scene->object(1))->palette();
 	//color
 	for(uint32_t i = 0; i < 3; i++)
 	{
-		if(m_type == tn[i])
+		if(m_type == tw[i])
 		{
 			return palette.color(node->warping(i), m_ue[i + 0], m_ue[i + 3]);
 		}
@@ -377,14 +417,27 @@ canvas::Color Draw::node_color(const sections::Node* node) const
 canvas::Color Draw::fiber_color(const sections::fibers::Fiber* fiber) const
 {
 	//data
-	const Type tn[] = {Type::FibersWarpingT, Type::FibersWarpingS2, Type::FibersWarpingS3};
+	const Type tw[] = {
+		Type::FibersWarpingT, Type::FibersWarpingS2, Type::FibersWarpingS3
+	};
+	const Type tg[] = {
+		Type::FibersGradientT2, Type::FibersGradientS22, Type::FibersGradientS32, Type::FibersGradientT3, Type::FibersGradientS23, Type::FibersGradientS33
+	};
 	const canvas::palettes::Palette& palette = ((canvas::objects::Palette*) m_scene->object(1))->palette();
-	//color
+	//warping
 	for(uint32_t i = 0; i < 3; i++)
 	{
-		if(m_type == tn[i])
+		if(m_type == tw[i])
 		{
 			return palette.color(fiber->warping(i), m_ue[i + 0], m_ue[i + 3]);
+		}
+	}
+	//gradient
+	for(uint32_t i = 0; i < 6; i++)
+	{
+		if(m_type == tg[i])
+		{
+			return palette.color(fiber->gradient(i % 3, i / 3), m_ge[i + 0], m_ge[i + 6]);
 		}
 	}
 	//return

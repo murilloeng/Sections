@@ -28,7 +28,8 @@ int main(void)
 	{
 		//data
 		sections::Rectangle section;
-		section.fibers_height(30);
+		section.fibers_width(20);
+		section.fibers_height(60);
 		section.mesh_size(2.00e-02);
 		//compute
 		section.compute();
