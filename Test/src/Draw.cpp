@@ -20,7 +20,7 @@
 static const uint32_t mesh_curved = 10;
 
 //constructor
-Draw::Draw(void) : m_type{Type::Mesh}
+Draw::Draw(void) : m_type{Type::Mesh}, m_section{nullptr}, m_palette{nullptr}
 {
 	return;
 }
@@ -402,13 +402,12 @@ canvas::Color Draw::node_color(const sections::Node* node) const
 {
 	//data
 	const Type tw[] = {Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3};
-	const canvas::palettes::Palette& palette = ((canvas::objects::Palette*) m_scene->object(1))->palette();
 	//color
 	for(uint32_t i = 0; i < 3; i++)
 	{
 		if(m_type == tw[i])
 		{
-			return palette.color(node->warping(i), m_ue[i + 0], m_ue[i + 3]);
+			return m_palette->color(node->warping(i), m_ue[i + 0], m_ue[i + 3]);
 		}
 	}
 	//return
@@ -423,13 +422,12 @@ canvas::Color Draw::fiber_color(const sections::fibers::Fiber* fiber) const
 	const Type tg[] = {
 		Type::FibersGradientT2, Type::FibersGradientS22, Type::FibersGradientS32, Type::FibersGradientT3, Type::FibersGradientS23, Type::FibersGradientS33
 	};
-	const canvas::palettes::Palette& palette = ((canvas::objects::Palette*) m_scene->object(1))->palette();
 	//warping
 	for(uint32_t i = 0; i < 3; i++)
 	{
 		if(m_type == tw[i])
 		{
-			return palette.color(fiber->warping(i), m_ue[i + 0], m_ue[i + 3]);
+			return m_palette->color(fiber->warping(i), m_ue[i + 0], m_ue[i + 3]);
 		}
 	}
 	//gradient
@@ -437,7 +435,7 @@ canvas::Color Draw::fiber_color(const sections::fibers::Fiber* fiber) const
 	{
 		if(m_type == tg[i])
 		{
-			return palette.color(fiber->gradient(i % 3, i / 3), m_ge[i + 0], m_ge[i + 6]);
+			return m_palette->color(fiber->gradient(i % 3, i / 3), m_ge[i + 0], m_ge[i + 6]);
 		}
 	}
 	//return

@@ -10,7 +10,10 @@
 #include "Sections/Test/inc/What.hpp"
 
 //Canvas
+#include "Canvas/inc/Palettes/Palette.hpp"
 #include "Canvas/inc/Objects/Bases/BaseModel3D.hpp"
+
+class Engine;
 
 class Draw : public canvas::objects::BaseModel3D
 {
@@ -63,15 +66,20 @@ private:
 	Type m_type;
 	What m_what;
 	double m_ue[6], m_ge[12];
-	sections::Section* m_section;
-
+	
 	uint32_t m_index_lines;
 	uint32_t m_index_points;
 	uint32_t m_index_vertices;
 	uint32_t m_index_triangles;
-
+	
 	uint32_t m_counter_lines;
 	uint32_t m_counter_points;
 	uint32_t m_counter_vertices;
 	uint32_t m_counter_triangles;
+	
+	sections::Section* m_section;
+	const canvas::palettes::Palette* m_palette;
+
+	//friends
+	friend class Engine;
 };

@@ -10,6 +10,7 @@
 //Canvas
 #include "Canvas/inc/Scene/Scene.hpp"
 #include "Canvas/inc/Cameras/Click.hpp"
+#include "Canvas/inc/Objects/Image/Text2D.hpp"
 #include "Canvas/inc/Objects/Image/Palette.hpp"
 
 class Engine
@@ -41,6 +42,7 @@ private:
 	void setup_callbacks(void);
 
 	//update
+	void update_type(void) const;
 	static void update_nodes(GLFWwindow*);
 	static void update_playing(GLFWwindow*);
 	static void update_elements(GLFWwindow*);
@@ -67,5 +69,6 @@ private:
 	GLFWwindow* m_window;
 	canvas::Scene* m_scene;
 	sections::Section* m_section;
+	canvas::objects::Text2D* m_text;
 	canvas::objects::Palette* m_palette;
 };

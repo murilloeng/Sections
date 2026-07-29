@@ -12,7 +12,7 @@
 
 //constructor
 Engine::Engine(void) : 
-	m_draw{nullptr}, m_playing{false}, m_show_fps{true}, m_framerate{60}, m_scene{nullptr}, m_section{nullptr}, m_palette{nullptr}
+	m_draw{nullptr}, m_playing{false}, m_show_fps{true}, m_framerate{60}, m_scene{nullptr}, m_section{nullptr}, m_text{nullptr}, m_palette{nullptr}
 {
 	setup_glfw();
 	setup_scene();
@@ -53,13 +53,6 @@ void Engine::start(void)
 		glfwPollEvents();
 		m_scene->time(t2);
 		m_scene->update_animations();
-		//palette
-		double s1, s2;
-		m_draw->extrema(s1, s2);
-		m_palette->min(float(s1));
-		m_palette->max(float(s2));
-		const Type type = m_draw->type();
-		m_palette->visible(type != Type::Mesh && type != Type::Fibers);
 		//draw
 		m_scene->draw();
 		glfwSwapBuffers(m_window);
@@ -133,10 +126,18 @@ void Engine::setup_scene(void)
 	canvas::shaders::Shader::add_path("../Canvas/shd/");
 	//objects
 	m_draw = new Draw;
+	m_text = new canvas::objects::Text2D;
 	m_palette = new canvas::objects::Palette;
 	//setup
+	m_text->scale(0.08f);
+	m_text->anchor("NW");
+	m_text->shift({-1, +1});
+	m_draw->m_palette = &m_palette->palette();
+	//setup
+	update_type();
 	m_scene->add_font("times");
 	m_scene->add_object(m_draw);
+	m_scene->add_object(m_text);
 	m_scene->add_object(m_palette);
 	//screen
 	int32_t width, height;
@@ -154,6 +155,25 @@ void Engine::setup_callbacks(void)
 }
 
 //step
+void Engine::update_type(void) const
+{
+	//data
+	const uint32_t index = uint32_t(m_draw->type());
+	const char* labels[] = {
+		"Mesh", "Mesh Warping T", "Mesh Warping S2", "Mesh Warping S3", 
+		"Fibers", "Fibers Warping T", "Fibers Warping S2", "Fibers Warping S3", 
+		"Mesh Gradient T2", "Mesh Gradient S22", "Mesh Gradient S32", "Mesh Gradient T3", "Mesh Gradient S23", "Mesh Gradient S33", 
+		"Fibers Gradient T2", "Fibers Gradient S22", "Fibers Gradient S32", "Fibers Gradient T3", "Fibers Gradient S23", "Fibers Gradient S33"
+	};
+	//text
+	m_text->text(labels[index]);
+	//palette
+	double s1, s2;
+	m_draw->extrema(s1, s2);
+	m_palette->min(float(s1));
+	m_palette->max(float(s2));
+	m_palette->visible(Type(index) != Type::Mesh && Type(index) != Type::Fibers);
+}
 void Engine::update_nodes(GLFWwindow* window)
 {
 	//data
@@ -195,6 +215,7 @@ void Engine::update_type(GLFWwindow* window, bool increase)
 	const uint32_t type_new = increase ? (type_old + 1) % last : type_old == 0 ? last - 1 : type_old - 1;
 	engine->m_draw->type(Type(type_new));
 	//update
+	engine->update_type();
 	engine->m_scene->setup();
 	engine->m_scene->update();
 	engine->m_scene->camera().bound();
