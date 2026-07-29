@@ -332,6 +332,49 @@ namespace sections
 		}
 		warping_center();
 	}
+	void Section::compute_gradients(void)
+	{
+		//setup
+		double Ae;
+		const double pv[] = {
+			-1, -1, +1, -1, -1, +1, 
+			+0, -1, +0, +0, -1, +0
+		};
+		math::Matrix J(2, 2), B(6, 2), ue(3, 6);
+		std::vector<double> An(m_nodes.size(), 0);
+		for(Node& node : m_nodes) memset(node.m_gradient, 0, 6 * sizeof(double));
+		//assemble
+		for(const Element& element : m_elements)
+		{
+			//area
+			Ae = 0;
+			element.compute_area(Ae);
+			//warping
+			for(uint32_t i = 0; i < 6; i++)
+			{
+				for(uint32_t j = 0; j < 3; j++)
+				{
+					ue(j, i) = m_nodes[element.m_nodes[i]].m_warping[j];
+				}
+			}
+			//gradient
+			for(uint32_t i = 0; i < 6; i++)
+			{
+				An[element.m_nodes[i]] += Ae;
+				element.jacobian(J.data(), pv + 2 * i);
+				element.gradient(B.data(), pv + 2 * i);
+				math::Matrix(m_nodes[element.m_nodes[i]].m_gradient, 3, 2) += Ae * ue * B * J.inverse();
+			}
+		}
+		//update
+		for(uint32_t i = 0; i < m_nodes.size(); i++)
+		{
+			if(An[i] != 0)
+			{
+				for(double& gradient : m_nodes[i].m_gradient) gradient /= An[i];
+			}
+		}
+	}
 	void Section::compute_properties(void)
 	{
 		//data
@@ -466,6 +509,8 @@ namespace sections
 			node.m_warping[1] = A2 / I3 * n2 + Am / I2 * n3;
 			node.m_warping[2] = Am / I3 * n2 + A3 / I2 * n3;
 		}
+		//gradients
+		compute_gradients();
 	}
 
 	//geometry

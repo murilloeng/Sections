@@ -7,7 +7,7 @@
 namespace sections
 {
 	//constructor
-	Node::Node(void) : m_warping{0, 0, 0}, m_position{0, 0}, m_warping_gradient{0, 0, 0, 0, 0, 0}
+	Node::Node(void) : m_warping{0, 0, 0}, m_position{0, 0}, m_gradient{0, 0, 0, 0, 0, 0}
 	{
 		return;
 	}
@@ -37,13 +37,13 @@ namespace sections
 		return m_position[index];
 	}
 
-	const double* Node::warping_gradient(void) const
+	const double* Node::gradient(void) const
 	{
-		return m_warping_gradient;
+		return m_gradient;
 	}
-	double Node::warping_gradient(uint32_t index_warping, uint32_t index_coordinate) const
+	double Node::gradient(uint32_t index_warping, uint32_t index_coordinate) const
 	{
-		return m_warping_gradient[3 * index_warping + index_coordinate];
+		return m_gradient[3 * index_coordinate + index_warping];
 	}
 
 	//print
@@ -55,6 +55,9 @@ namespace sections
 		//warping
 		printf("Warping: ");
 		for(const double& warping : m_warping) printf("%+.6e ", warping);
+		//warping
+		printf("Gradient: ");
+		for(const double& gradient : m_gradient) printf("%+.6e ", gradient);
 		//end line
 		printf("\n");
 	}

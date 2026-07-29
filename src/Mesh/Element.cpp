@@ -306,7 +306,7 @@ namespace sections
 			N[i] = 0;
 			for(uint32_t j = 0; j < 6; j++)
 			{
-				N[i] += A[6 * i + j] / 2 * v[j];
+				N[i] += A[j + 6 * i] / 2 * v[j];
 			}
 		}
 		return N;

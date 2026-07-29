@@ -181,14 +181,10 @@ void Draw::compute_extrema(void)
 			m_ue[i + 0] = fmin(m_ue[i + 0], node.warping(i));
 			m_ue[i + 3] = fmax(m_ue[i + 3], node.warping(i));
 		}
-	}
-	//gradient
-	for(const sections::fibers::Fiber* fiber : m_section->fibers())
-	{
 		for(uint32_t i = 0; i < 6; i++)
 		{
-			m_ge[i + 0] = fmin(m_ge[i + 0], fiber->gradient(i % 3, i / 3));
-			m_ge[i + 6] = fmax(m_ge[i + 6], fiber->gradient(i % 3, i / 3));
+			m_ge[i + 0] = fmin(m_ge[i + 0], node.gradient(i % 3, i / 3));
+			m_ge[i + 6] = fmax(m_ge[i + 6], node.gradient(i % 3, i / 3));
 		}
 	}
 }
@@ -401,13 +397,26 @@ void Draw::update_fiber_rectangle(const sections::fibers::Rectangle* fiber)
 canvas::Color Draw::node_color(const sections::Node* node) const
 {
 	//data
-	const Type tw[] = {Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3};
-	//color
+	const Type tw[] = {
+		Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3
+	};
+	const Type tg[] = {
+		Type::MeshGradientT2, Type::MeshGradientS22, Type::MeshGradientS32, Type::MeshGradientT3, Type::MeshGradientS23, Type::MeshGradientS33
+	};
+	//warping
 	for(uint32_t i = 0; i < 3; i++)
 	{
 		if(m_type == tw[i])
 		{
 			return m_palette->color(node->warping(i), m_ue[i + 0], m_ue[i + 3]);
+		}
+	}
+	//gradient
+	for(uint32_t i = 0; i < 6; i++)
+	{
+		if(m_type == tg[i])
+		{
+			return m_palette->color(node->gradient(i % 3, i / 3), m_ge[i + 0], m_ge[i + 6]);
 		}
 	}
 	//return

@@ -24,8 +24,8 @@ namespace sections
 		double position(uint32_t) const;
 		const double* position(void) const;
 
-		const double* warping_gradient(void) const;
-		double warping_gradient(uint32_t, uint32_t) const;
+		const double* gradient(void) const;
+		double gradient(uint32_t, uint32_t) const;
 
 		//print
 		void print(void) const;
@@ -34,7 +34,7 @@ namespace sections
 		//data
 		double m_warping[3];
 		double m_position[2];
-		double m_warping_gradient[6];
+		double m_gradient[6];
 
 		//friends
 		friend class Element;

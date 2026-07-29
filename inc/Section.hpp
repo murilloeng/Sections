@@ -64,6 +64,7 @@ namespace sections
 		void compute_center(void);
 		void compute_inertia(void);
 		void compute_warping(void);
+		void compute_gradients(void);
 		void compute_properties(void);
 		void compute_plastic_center(void);
 		void compute_elastic_modulus(void);
