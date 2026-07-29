@@ -45,6 +45,7 @@ private:
 	static void update_playing(GLFWwindow*);
 	static void update_elements(GLFWwindow*);
 	static void update_step(GLFWwindow*, bool);
+	static void update_type(GLFWwindow*, bool);
 	static void update_framerate(GLFWwindow*, bool);
 
 	//canvas

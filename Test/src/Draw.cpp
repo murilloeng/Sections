@@ -20,7 +20,7 @@
 static const uint32_t mesh_curved = 10;
 
 //constructor
-Draw::Draw(void) : m_type{Type::FibersGradientS33}
+Draw::Draw(void) : m_type{Type::Mesh}
 {
 	return;
 }

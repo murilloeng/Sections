@@ -181,9 +181,23 @@ void Engine::update_elements(GLFWwindow* window)
 	engine->m_scene->update();
 	engine->m_scene->camera().bound();
 }
-void Engine::update_step(GLFWwindow * window, bool increase)
+void Engine::update_step(GLFWwindow* window, bool increase)
 {
 	return;
+}
+void Engine::update_type(GLFWwindow* window, bool increase)
+{
+	//data
+	const uint32_t last = uint32_t(Type::Last);
+	const Engine* engine = (Engine*) glfwGetWindowUserPointer(window);
+	//type
+	const uint32_t type_old = uint32_t(engine->m_draw->type());
+	const uint32_t type_new = increase ? (type_old + 1) % last : type_old == 0 ? last - 1 : type_old - 1;
+	engine->m_draw->type(Type(type_new));
+	//update
+	engine->m_scene->setup();
+	engine->m_scene->update();
+	engine->m_scene->camera().bound();
 }
 void Engine::update_framerate(GLFWwindow* window, bool increase)
 {
@@ -287,6 +301,9 @@ void Engine::callback_keyboard(GLFWwindow* window, int32_t key, int32_t scancode
 	//step
 	else if(shift && key == GLFW_KEY_LEFT) update_step(window, false);
 	else if(shift && key == GLFW_KEY_RIGHT) update_step(window, true);
+	//type
+	else if(shift && key == GLFW_KEY_UP) update_type(window, true);
+	else if(shift && key == GLFW_KEY_DOWN) update_type(window, false);
 	//framerate
 	else if(shift && key == GLFW_KEY_F) update_framerate(window, true);
 	else if(control && key == GLFW_KEY_F) update_framerate(window, false);
