@@ -1,8 +1,13 @@
+//std
+#include <cstring>
+#include <stdexcept>
+
 //gmsh
 #include <gmsh.h>
 
 //Sections
 #include "Sections/inc/ProfileI.hpp"
+#include "Sections/inc/Catalog/ProfileI.hpp"
 
 namespace sections
 {
@@ -11,11 +16,37 @@ namespace sections
 	{
 		return;
 	}
+	ProfileI::ProfileI(const char* label)
+	{
+		catalog(label);
+	}
 
 	//destructor
 	ProfileI::~ProfileI(void)
 	{
 		return;
+	}
+
+	//data
+	void ProfileI::catalog(const char* label)
+	{
+		bool test = false;
+		for(const catalog::ProfileI& item : catalog::ProfileI::m_list)
+		{
+			if(!test && strcmp(label, item.m_label) == 0)
+			{
+				test = true;
+				m_radius = item.m_radius;
+				m_web_height = item.m_height;
+				m_flange_width = item.m_width;
+				m_web_thickness = item.m_web_thickness;
+				m_flange_thickness = item.m_flange_thickness;
+			}
+		}
+		if(!test)
+		{
+			throw std::runtime_error("Error: Profile I label not found in catalog!");
+		}
 	}
 
 	//geometry

@@ -1,8 +1,13 @@
+//std
+#include <cstring>
+#include <stdexcept>
+
 //gmsh
 #include <gmsh.h>
 
 //Sections
 #include "Sections/inc/RHS.hpp"
+#include "Sections/inc/Catalog/RHS.hpp"
 
 namespace sections
 {
@@ -10,6 +15,10 @@ namespace sections
 	RHS::RHS(void) : m_width{3.00e-02}, m_height{5.00e-02}, m_thickness{2.60e-03}, m_radius_inner{2.60e-03}, m_radius_outer{3.90e-03}
 	{
 		return;
+	}
+	RHS::RHS(const char* label)
+	{
+		catalog(label);
 	}
 
 	//destructor
@@ -19,6 +28,27 @@ namespace sections
 	}
 
 	//data
+	void RHS::catalog(const char* label)
+	{
+		bool test = false;
+		for(const catalog::RHS& item : catalog::RHS::m_list)
+		{
+			if(!test && strcmp(label, item.m_label) == 0)
+			{
+				test = true;
+				m_width = item.m_width;
+				m_height = item.m_height;
+				m_thickness = item.m_thickness;
+				m_radius_inner = item.m_radius_inner;
+				m_radius_outer = item.m_radius_outer;
+			}
+		}
+		if(!test)
+		{
+			throw std::runtime_error("Error: RHS label not found in catalog!");
+		}
+	}
+
 	double RHS::width(void) const
 	{
 		return m_width;
@@ -238,6 +268,10 @@ namespace sections
 		gmsh::model::geo::addPlaneSurface({2, -1}, 1);
 	}
 
+	void RHS::setup_fibers(void)
+	{
+		return;
+	}
 	void RHS::setup_isolated(void)
 	{
 		if(m_radius_inner == 0 && m_radius_outer != 0) m_isolated = { 8,  9, 10, 11};

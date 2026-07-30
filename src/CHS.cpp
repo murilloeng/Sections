@@ -1,9 +1,14 @@
+//std
+#include <cstring>
+#include <stdexcept>
+
 //gmsh
 #include <gmsh.h>
 
 //Sections
 #include "Sections/inc/CHS.hpp"
 #include "Sections/inc/Fibers/Arc.hpp"
+#include "Sections/inc/Catalog/CHS.hpp"
 
 namespace sections
 {
@@ -11,6 +16,10 @@ namespace sections
 	CHS::CHS(void) : m_diameter{2.13e-02}, m_thickness{2.30e-03}, m_fibers_angle{10}, m_fibers_radius{5}
 	{
 		return;
+	}
+	CHS::CHS(const char* label) : m_fibers_angle{10}, m_fibers_radius{5}
+	{
+		catalog(label);
 	}
 
 	//destructor
@@ -20,6 +29,24 @@ namespace sections
 	}
 
 	//data
+	void CHS::catalog(const char* label)
+	{
+		bool test = false;
+		for(const catalog::CHS& item : catalog::CHS::m_list)
+		{
+			if(!test && strcmp(label, item.m_label) == 0)
+			{
+				test = true;
+				m_diameter = item.m_diameter;
+				m_thickness = item.m_thickness;
+			}
+		}
+		if(!test)
+		{
+			throw std::runtime_error("Error: CHS label not found in catalog!");
+		}
+	}
+
 	double CHS::diameter(void) const
 	{
 		return m_diameter;

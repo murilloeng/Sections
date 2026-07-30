@@ -10,11 +10,14 @@ namespace sections
 	public:
 		//constructor
 		RHS(void);
+		RHS(const char*);
 
 		//destructor
 		~RHS(void);
 
 		//data
+		void catalog(const char*);
+
 		double width(double);
 		double width(void) const;
 
@@ -37,6 +40,7 @@ namespace sections
 		void setup_geometry_3(void) const;
 		void setup_geometry_4(void) const;
 
+		void setup_fibers(void) override;
 		void setup_isolated(void) override;
 		void setup_geometry(void) const override;
 

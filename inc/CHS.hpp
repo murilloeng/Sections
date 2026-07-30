@@ -10,11 +10,14 @@ namespace sections
 	public:
 		//constructor
 		CHS(void);
+		CHS(const char*);
 
 		//destructor
 		~CHS(void);
 
 		//data
+		void catalog(const char*);
+
 		double diameter(double);
 		double diameter(void) const;
 

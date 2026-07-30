@@ -10,9 +10,13 @@ namespace sections
 	public:
 		//constructor
 		ProfileI(void);
+		ProfileI(const char*);
 
 		//destructor
 		~ProfileI(void);
+
+		//data
+		void catalog(const char*);
 
 	private:
 		//geometry
