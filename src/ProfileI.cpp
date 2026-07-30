@@ -31,16 +31,17 @@ namespace sections
 	void ProfileI::catalog(const char* label)
 	{
 		bool test = false;
+		const double units = 1.00e-03;
 		for(const catalog::ProfileI& item : catalog::ProfileI::m_list)
 		{
 			if(!test && strcmp(label, item.m_label) == 0)
 			{
 				test = true;
-				m_radius = item.m_radius;
-				m_web_height = item.m_height;
-				m_flange_width = item.m_width;
-				m_web_thickness = item.m_web_thickness;
-				m_flange_thickness = item.m_flange_thickness;
+				m_radius = units * item.m_radius;
+				m_flange_width = units * item.m_width;
+				m_web_thickness = units * item.m_web_thickness;
+				m_flange_thickness = units * item.m_flange_thickness;
+				m_web_height = units * (item.m_height - 2 * item.m_flange_thickness);
 			}
 		}
 		if(!test)

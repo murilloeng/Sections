@@ -28,8 +28,7 @@ int main(void)
 	try
 	{
 		//data
-		sections::ProfileC section;
-		// section.radius(0);
+		sections::ProfileI section("IPE-100");
 		section.mesh_size(2e-3);
 		//compute
 		section.compute();
