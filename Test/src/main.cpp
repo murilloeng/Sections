@@ -27,10 +27,8 @@ int main(void)
 	try
 	{
 		//data
-		sections::Rectangle section;
-		section.fibers_width(20);
-		section.fibers_height(60);
-		section.mesh_size(2.00e-02);
+		sections::ProfileT section;
+		section.mesh_size(2e-3);
 		//compute
 		section.compute();
 		//print

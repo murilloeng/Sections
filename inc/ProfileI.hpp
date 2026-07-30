@@ -19,6 +19,7 @@ namespace sections
 		void setup_geometry_1(void) const;
 		void setup_geometry_2(void) const;
 
+		void setup_fibers(void) override;
 		void setup_isolated(void) override;
 		void setup_geometry(void) const override;
 	};

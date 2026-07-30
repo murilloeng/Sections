@@ -87,6 +87,25 @@ namespace sections
 		gmsh::model::geo::addPlaneSurface({1}, 1);
 	}
 
+	void ProfileT::setup_fibers(void)
+	{
+		//data
+		const double wh = m_web_height;
+		const double fw = m_flange_width;
+		const double wt = m_web_thickness;
+		const double ft = m_flange_thickness;
+		const uint32_t nwh = m_fibers_web_height;
+		const uint32_t nfw = m_fibers_flange_width;
+		const uint32_t nwt = m_fibers_web_thickness;
+		const uint32_t nft = m_fibers_flange_thickness;
+		//center
+		const double S1 = wh / 2 * wh * wt;
+		const double S2 = (wh + ft / 2) * fw * ft;
+		const double x2 = (S1 + S2) / (wh * wt + fw * ft);
+		//fibers
+		fibers::Fiber::create_rectangles(m_fibers, -x2, -wt / 2, wh, wt, nwh, nwt);
+		fibers::Fiber::create_rectangles(m_fibers, wh - x2, -fw / 2, ft, fw, nft, nfw);
+	}
 	void ProfileT::setup_isolated(void)
 	{
 		if(m_radius) m_isolated = {3, 10};

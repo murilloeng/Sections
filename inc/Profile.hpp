@@ -30,6 +30,18 @@ namespace sections
 		double flange_thickness(double);
 		double flange_thickness(void) const;
 
+		uint32_t fibers_web_height(uint32_t);
+		uint32_t fibers_web_height(void) const;
+
+		uint32_t fibers_flange_width(uint32_t);
+		uint32_t fibers_flange_width(void) const;
+
+		uint32_t fibers_web_thickness(uint32_t);
+		uint32_t fibers_web_thickness(void) const;
+
+		uint32_t fibers_flange_thickness(uint32_t);
+		uint32_t fibers_flange_thickness(void) const;
+
 	protected:
 		//data
 		double m_radius;
@@ -37,5 +49,10 @@ namespace sections
 		double m_flange_width;
 		double m_web_thickness;
 		double m_flange_thickness;
+
+		uint32_t m_fibers_web_height;
+		uint32_t m_fibers_flange_width;
+		uint32_t m_fibers_web_thickness;
+		uint32_t m_fibers_flange_thickness;
 	};
 }
