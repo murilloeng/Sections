@@ -22,7 +22,7 @@ static const uint32_t mesh_curved = 10;
 //constructor
 Draw::Draw(void) : m_type{Type::Mesh}, m_section{nullptr}, m_palette{nullptr}
 {
-	return;
+	for(double& scale : m_scale) scale = 1;
 }
 
 //constructor
@@ -242,9 +242,9 @@ void Draw::update_nodes(void)
 	{
 		ibo_ptr[i] = i;
 		vbo_ptr[i].m_color = "red";
-		vbo_ptr[i].m_position[2] = 0;
 		vbo_ptr[i].m_position[0] = -nodes[i].position(1);
 		vbo_ptr[i].m_position[1] = +nodes[i].position(0);
+		vbo_ptr[i].m_position[2] = node_height(&nodes[i]);
 	}
 	//update
 	m_index_points += nn;
@@ -280,12 +280,12 @@ void Draw::update_elements(void)
 	for(uint32_t i = 0; i < nn; i++)
 	{
 		vbo_ptr[i + 0 * nn].m_color = "white";
-		vbo_ptr[i + 0 * nn].m_position[2] = 0;
-		vbo_ptr[i + 1 * nn].m_position[2] = 0;
 		vbo_ptr[i + 0 * nn].m_position[0] = -nodes[i].position(1);
 		vbo_ptr[i + 0 * nn].m_position[1] = +nodes[i].position(0);
 		vbo_ptr[i + 1 * nn].m_position[0] = -nodes[i].position(1);
 		vbo_ptr[i + 1 * nn].m_position[1] = +nodes[i].position(0);
+		vbo_ptr[i + 0 * nn].m_position[2] = node_height(&nodes[i]);
+		vbo_ptr[i + 1 * nn].m_position[2] = node_height(&nodes[i]);
 		vbo_ptr[i + 1 * nn].m_color = node_color(&m_section->node(i));
 	}
 	//ibo data
@@ -328,8 +328,8 @@ void Draw::update_fiber_arc(const sections::fibers::Arc* fiber)
 		vbo_ptr[1 * (mesh_curved + 1) + i].m_color = "white";
 		vbo_ptr[2 * (mesh_curved + 1) + i].m_color = fiber_color(fiber);
 		vbo_ptr[3 * (mesh_curved + 1) + i].m_color = fiber_color(fiber);
-		vbo_ptr[0 * (mesh_curved + 1) + i].m_position[2] = vbo_ptr[2 * (mesh_curved + 1) + i].m_position[2] = 0;
-		vbo_ptr[1 * (mesh_curved + 1) + i].m_position[2] = vbo_ptr[3 * (mesh_curved + 1) + i].m_position[2] = 0;
+		vbo_ptr[0 * (mesh_curved + 1) + i].m_position[2] = vbo_ptr[2 * (mesh_curved + 1) + i].m_position[2] = fiber_height(fiber);
+		vbo_ptr[1 * (mesh_curved + 1) + i].m_position[2] = vbo_ptr[3 * (mesh_curved + 1) + i].m_position[2] = fiber_height(fiber);
 		vbo_ptr[0 * (mesh_curved + 1) + i].m_position[0] = vbo_ptr[2 * (mesh_curved + 1) + i].m_position[0] = r1 * cos(q + a * i / mesh_curved);
 		vbo_ptr[0 * (mesh_curved + 1) + i].m_position[1] = vbo_ptr[2 * (mesh_curved + 1) + i].m_position[1] = r1 * sin(q + a * i / mesh_curved);
 		vbo_ptr[1 * (mesh_curved + 1) + i].m_position[0] = vbo_ptr[3 * (mesh_curved + 1) + i].m_position[0] = r2 * cos(q + a * i / mesh_curved);
@@ -369,9 +369,9 @@ void Draw::update_fiber_rectangle(const sections::fibers::Rectangle* fiber)
 	uint32_t* ibo_ptr_triangles = m_ibo.data() + m_counter_points + m_counter_lines + m_index_triangles;
 	canvas::vertices::Model3D* vbo_ptr = (canvas::vertices::Model3D*) m_vbo.data() + m_index_vertices;
 	//vbo data
-	for(uint32_t i = 0; i < 8; i++) vbo_ptr[i].m_position[2] = 0;
 	for(uint32_t i = 0; i < 4; i++) vbo_ptr[i + 0].m_color = "white";
 	for(uint32_t i = 0; i < 4; i++) vbo_ptr[i + 4].m_color = fiber_color(fiber);
+	for(uint32_t i = 0; i < 8; i++) vbo_ptr[i].m_position[2] = fiber_height(fiber);
 	vbo_ptr[0].m_position[0] = vbo_ptr[3].m_position[0] = vbo_ptr[4].m_position[0] = vbo_ptr[7].m_position[0] = -x3 + s3 / 2;
 	vbo_ptr[1].m_position[0] = vbo_ptr[2].m_position[0] = vbo_ptr[5].m_position[0] = vbo_ptr[6].m_position[0] = -x3 - s3 / 2;
 	vbo_ptr[0].m_position[1] = vbo_ptr[1].m_position[1] = vbo_ptr[4].m_position[1] = vbo_ptr[5].m_position[1] = +x2 - s2 / 2;
@@ -391,6 +391,52 @@ void Draw::update_fiber_rectangle(const sections::fibers::Rectangle* fiber)
 	m_index_lines += 8;
 	m_index_vertices += 8;
 	m_index_triangles += 6;
+}
+
+//height
+double Draw::node_height(const sections::Node* node) const
+{
+	//data
+	const Type tw[] = {
+		Type::MeshWarpingT, Type::MeshWarpingS2, Type::MeshWarpingS3
+	};
+	const Type tg[] = {
+		Type::MeshGradientT2, Type::MeshGradientS22, Type::MeshGradientS32, Type::MeshGradientT3, Type::MeshGradientS23, Type::MeshGradientS33
+	};
+	//warping
+	for(uint32_t i = 0; i < 3; i++)
+	{
+		if(m_type == tw[i]) return m_scale[uint32_t(m_type)] * node->warping(i);
+	}
+	//gradient
+	for(uint32_t i = 0; i < 6; i++)
+	{
+		if(m_type == tg[i]) return m_scale[uint32_t(m_type)] * node->gradient(i % 3, i / 3);
+	}
+	//return
+	return 0;
+}
+double Draw::fiber_height(const sections::fibers::Fiber* fiber) const
+{
+	//data
+	const Type tw[] = {
+		Type::FibersWarpingT, Type::FibersWarpingS2, Type::FibersWarpingS3
+	};
+	const Type tg[] = {
+		Type::FibersGradientT2, Type::FibersGradientS22, Type::FibersGradientS32, Type::FibersGradientT3, Type::FibersGradientS23, Type::FibersGradientS33
+	};
+	//warping
+	for(uint32_t i = 0; i < 3; i++)
+	{
+		if(m_type == tw[i]) return m_scale[uint32_t(m_type)] * fiber->warping(i);
+	}
+	//gradient
+	for(uint32_t i = 0; i < 6; i++)
+	{
+		if(m_type == tg[i]) return m_scale[uint32_t(m_type)] * fiber->gradient(i % 3, i / 3);
+	}
+	//return
+	return 0;
 }
 
 //color

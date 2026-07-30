@@ -58,6 +58,10 @@ private:
 	void update_fiber_arc(const sections::fibers::Arc*);
 	void update_fiber_rectangle(const sections::fibers::Rectangle*);
 
+	//height
+	double node_height(const sections::Node*) const;
+	double fiber_height(const sections::fibers::Fiber*) const;
+
 	//colors
 	canvas::Color node_color(const sections::Node*) const;
 	canvas::Color fiber_color(const sections::fibers::Fiber*) const;
@@ -79,6 +83,8 @@ private:
 	
 	sections::Section* m_section;
 	const canvas::palettes::Palette* m_palette;
+
+	double m_scale[uint32_t(Type::Last)];
 
 	//friends
 	friend class Engine;
