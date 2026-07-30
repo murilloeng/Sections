@@ -31,16 +31,17 @@ namespace sections
 	void RHS::catalog(const char* label)
 	{
 		bool test = false;
+		const double units = 1.00e-03;
 		for(const catalog::RHS& item : catalog::RHS::m_list)
 		{
 			if(!test && strcmp(label, item.m_label) == 0)
 			{
 				test = true;
-				m_width = item.m_width;
-				m_height = item.m_height;
-				m_thickness = item.m_thickness;
-				m_radius_inner = item.m_radius_inner;
-				m_radius_outer = item.m_radius_outer;
+				m_width = units * item.m_width;
+				m_thickness = units * item.m_thickness;
+				m_radius_inner = units * item.m_radius_inner;
+				m_radius_outer = units * item.m_radius_outer;
+				m_height = units * (item.m_height - 2 * item.m_thickness);
 			}
 		}
 		if(!test)

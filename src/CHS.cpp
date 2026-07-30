@@ -32,13 +32,14 @@ namespace sections
 	void CHS::catalog(const char* label)
 	{
 		bool test = false;
+		const uint32_t units = 1.00e-03;
 		for(const catalog::CHS& item : catalog::CHS::m_list)
 		{
 			if(!test && strcmp(label, item.m_label) == 0)
 			{
 				test = true;
-				m_diameter = item.m_diameter;
-				m_thickness = item.m_thickness;
+				m_diameter = units * item.m_diameter;
+				m_thickness = units * item.m_thickness;
 			}
 		}
 		if(!test)
