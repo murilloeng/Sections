@@ -66,26 +66,26 @@ namespace sections
 		const double tw = m_web_thickness;
 		const double tf = m_flange_thickness;
 		//points
-		gmsh::model::geo::addPoint(-wf / 2, -hw / 2 - tf, 0, m_mesh_size, 1);
-		gmsh::model::geo::addPoint(+wf / 2, -hw / 2 - tf, 0, m_mesh_size, 2);
 		gmsh::model::geo::addPoint(+wf / 2, -hw / 2, 0, m_mesh_size, 3);
+		gmsh::model::geo::addPoint(+wf / 2, +hw / 2, 0, m_mesh_size, 10);
+		gmsh::model::geo::addPoint(-wf / 2, +hw / 2, 0, m_mesh_size, 13);
+		gmsh::model::geo::addPoint(-wf / 2, -hw / 2, 0, m_mesh_size, 20);
 		gmsh::model::geo::addPoint(+tw / 2 + r, -hw / 2, 0, m_mesh_size, 4);
-		gmsh::model::geo::addPoint(+tw / 2 + r, -hw / 2 + r, 0, m_mesh_size, 5);
 		gmsh::model::geo::addPoint(+tw / 2, -hw / 2 + r, 0, m_mesh_size, 6);
 		gmsh::model::geo::addPoint(+tw / 2, +hw / 2 - r, 0, m_mesh_size, 7);
-		gmsh::model::geo::addPoint(+tw / 2 + r, +hw / 2 - r, 0, m_mesh_size, 8);
 		gmsh::model::geo::addPoint(+tw / 2 + r, +hw / 2, 0, m_mesh_size, 9);
-		gmsh::model::geo::addPoint(+wf / 2, +hw / 2, 0, m_mesh_size, 10);
-		gmsh::model::geo::addPoint(+wf / 2, +hw / 2 + tf, 0, m_mesh_size, 11);
-		gmsh::model::geo::addPoint(-wf / 2, +hw / 2 + tf, 0, m_mesh_size, 12);
-		gmsh::model::geo::addPoint(-wf / 2, +hw / 2, 0, m_mesh_size, 13);
 		gmsh::model::geo::addPoint(-tw / 2 - r, +hw / 2, 0, m_mesh_size, 14);
-		gmsh::model::geo::addPoint(-tw / 2 - r, +hw / 2 - r, 0, m_mesh_size, 15);
 		gmsh::model::geo::addPoint(-tw / 2, +hw / 2 - r, 0, m_mesh_size, 16);
 		gmsh::model::geo::addPoint(-tw / 2, -hw / 2 + r, 0, m_mesh_size, 17);
-		gmsh::model::geo::addPoint(-tw / 2 - r, -hw / 2 + r, 0, m_mesh_size, 18);
 		gmsh::model::geo::addPoint(-tw / 2 - r, -hw / 2, 0, m_mesh_size, 19);
-		gmsh::model::geo::addPoint(-wf / 2, -hw / 2, 0, m_mesh_size, 20);
+		gmsh::model::geo::addPoint(-wf / 2, -hw / 2 - tf, 0, m_mesh_size, 1);
+		gmsh::model::geo::addPoint(+wf / 2, -hw / 2 - tf, 0, m_mesh_size, 2);
+		gmsh::model::geo::addPoint(+wf / 2, +hw / 2 + tf, 0, m_mesh_size, 11);
+		gmsh::model::geo::addPoint(-wf / 2, +hw / 2 + tf, 0, m_mesh_size, 12);
+		gmsh::model::geo::addPoint(+tw / 2 + r, -hw / 2 + r, 0, m_mesh_size, 5);
+		gmsh::model::geo::addPoint(+tw / 2 + r, +hw / 2 - r, 0, m_mesh_size, 8);
+		gmsh::model::geo::addPoint(-tw / 2 - r, +hw / 2 - r, 0, m_mesh_size, 15);
+		gmsh::model::geo::addPoint(-tw / 2 - r, -hw / 2 + r, 0, m_mesh_size, 18);
 		//curves
 		gmsh::model::geo::addLine( 1,  2,  1);
 		gmsh::model::geo::addLine( 2,  3,  2);

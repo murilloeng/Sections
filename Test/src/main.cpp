@@ -8,6 +8,7 @@
 #include "Sections/inc/Circle.hpp"
 #include "Sections/inc/ProfileI.hpp"
 #include "Sections/inc/ProfileT.hpp"
+#include "Sections/inc/ProfileC.hpp"
 #include "Sections/inc/Rectangle.hpp"
 #include "Sections/Test/inc/Engine.hpp"
 
@@ -27,7 +28,8 @@ int main(void)
 	try
 	{
 		//data
-		sections::ProfileT section;
+		sections::ProfileC section;
+		// section.radius(0);
 		section.mesh_size(2e-3);
 		//compute
 		section.compute();
