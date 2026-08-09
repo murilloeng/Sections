@@ -57,11 +57,6 @@ namespace sections
 			return m_gradient[3 * iz + iw];
 		}
 
-		materials::Point& Fiber::material_point(void)
-		{
-			return m_material_point;
-		}
-
 		//create
 		void Fiber::create_rectangles(std::vector<Fiber*>& fibers, double x2, double x3, double s2, double s3, uint32_t n2, uint32_t n3)
 		{

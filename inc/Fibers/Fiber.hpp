@@ -4,9 +4,6 @@
 #include <vector>
 #include <cstdint>
 
-//Materials
-#include "Materials/inc/Mechanic/Point.hpp"
-
 namespace sections
 {
 	class Section;
@@ -38,8 +35,6 @@ namespace sections
 			const double* gradient(void) const;
 			double gradient(uint32_t, uint32_t) const;
 
-			materials::Point& material_point(void);
-
 			//create
 			static void create_rectangles(std::vector<Fiber*>&, double, double, double, double, uint32_t, uint32_t);
 
@@ -54,7 +49,6 @@ namespace sections
 			double m_gradient[6];
 			double m_orientation;
 			double* m_residual_stress;
-			materials::Point m_material_point;
 
 			//friends
 			friend class sections::Section;
