@@ -9,6 +9,7 @@
 
 //Math
 #include "Math/inc/Linear/Vector.hpp"
+#include "Math/inc/Linear/Matrix.hpp"
 #include "Math/inc/Linear/Sparse.hpp"
 
 //static
